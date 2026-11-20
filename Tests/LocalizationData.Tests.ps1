@@ -93,6 +93,24 @@ Describe 'Localization data' {
         }
     }
 
+    It 'provides display strings for every quorum model and witness type' {
+        $Section = $script:Template['GetAbrHvClusterQuorum']
+        foreach ($Model in 'NodeMajority', 'NodeAndWitnessMajority', 'DiskOnly') {
+            $Section.ContainsKey("Model$Model") | Should -BeTrue -Because "Model$Model is rendered for that quorum model"
+        }
+        # 'Other' shows the raw resource type and needs no translation.
+        foreach ($Type in 'None', 'Disk', 'FileShare', 'Cloud') {
+            $Section.ContainsKey("Witness$Type") | Should -BeTrue -Because "Witness$Type is rendered for that witness type"
+        }
+    }
+
+    It 'provides display strings for every cluster network role' {
+        $Section = $script:Template['GetAbrHvClusterNetwork']
+        foreach ($Role in 'None', 'ClusterOnly', 'ClientOnly', 'ClusterAndClient') {
+            $Section.ContainsKey("Role$Role") | Should -BeTrue -Because "Role$Role is rendered for that network role"
+        }
+    }
+
     # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
     # -AllowNullOrEmptyForEach switch.
     if ($script:LanguageFolders.Count -gt 0) {

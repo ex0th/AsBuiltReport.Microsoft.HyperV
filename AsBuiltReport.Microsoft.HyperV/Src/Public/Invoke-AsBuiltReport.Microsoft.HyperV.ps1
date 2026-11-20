@@ -151,10 +151,12 @@
                     Get-AbrHvClusterOverview
                     # Quorum model, witness and node votes
                     Get-AbrHvClusterQuorum
+                    # Cluster networks, their use for live migration and the node interfaces
+                    Get-AbrHvClusterNetwork
                 }
 
                 # Planned sections (see README roadmap):
-                # Cluster: Networks, Live Migration, Cluster-Aware Updating
+                # Cluster: Live Migration, Cluster-Aware Updating
                 # Host: Hardware, OS build, Hyper-V settings, NICs, SET switches, RDMA/DCB
                 # Storage by topology: S2D pool/virtual disks/cache/fault domains, iSCSI/FC/MPIO, SMB shares
                 # Consistency: node-to-node comparison as health checks

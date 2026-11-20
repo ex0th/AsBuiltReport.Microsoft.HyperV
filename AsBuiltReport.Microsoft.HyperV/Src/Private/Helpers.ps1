@@ -595,6 +595,98 @@ function Resolve-HvQuorumState {
     }
 }
 
+function Resolve-HvClusterNetwork {
+    <#
+    .SYNOPSIS
+        Evaluates the cluster networks and their use for live migration.
+    .DESCRIPTION
+        Pure function without remote calls, so the evaluation can be unit tested with synthetic data.
+        Returns language-independent keys; report sections translate them for display.
+
+        RoleKey: None (0), ClusterOnly (1), ClientOnly (2), ClusterAndClient (3), or the raw value
+        StateSeverity: Ok, Warning, Critical
+        Findings: NoMigrationNetwork, SingleClusterNetwork
+
+        A network is allowed for live migration unless it is listed in MigrationExcludeNetworks of the
+        'Virtual Machine' resource type. MigrationNetworkOrder sets the preference of the allowed networks.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [Object[]] $Network,
+
+        # Semicolon separated network IDs, as stored in the cluster parameter.
+        [AllowNull()]
+        [AllowEmptyString()]
+        [String] $MigrationExcludeNetworks,
+
+        [AllowNull()]
+        [AllowEmptyString()]
+        [String] $MigrationNetworkOrder
+    )
+
+    $Excluded = @(([string]$MigrationExcludeNetworks).Split(';') | ForEach-Object { $_.Trim().ToLowerInvariant() } |
+            Where-Object { $_ })
+    $Order = @(([string]$MigrationNetworkOrder).Split(';') | ForEach-Object { $_.Trim().ToLowerInvariant() } |
+            Where-Object { $_ })
+
+    $Networks = foreach ($Item in @($Network | Where-Object { $_ })) {
+        $Id = ([string]$Item.Id).ToLowerInvariant()
+        $RoleKey = switch ([string]$Item.Role) {
+            { $_ -in '0', 'None' } { 'None'; break }
+            { $_ -in '1', 'Cluster' } { 'ClusterOnly'; break }
+            { $_ -in '2', 'Client' } { 'ClientOnly'; break }
+            { $_ -in '3', 'ClusterAndClient' } { 'ClusterAndClient'; break }
+            default { [string]$Item.Role }
+        }
+        $State = [string]$Item.State
+        $StateSeverity = switch ($State) {
+            'Up' { 'Ok' }
+            'Down' { 'Critical' }
+            default { 'Warning' }
+        }
+        $AllowedForMigration = ($Excluded -notcontains $Id)
+        $OrderIndex = [array]::IndexOf($Order, $Id)
+        [PSCustomObject]@{
+            Name = [string]$Item.Name
+            Id = $Id
+            RoleKey = $RoleKey
+            State = $State
+            StateSeverity = $StateSeverity
+            AllowedForMigration = $AllowedForMigration
+            MigrationOrder = $(if ($AllowedForMigration -and $OrderIndex -ge 0) { $OrderIndex + 1 } else { $null })
+        }
+    }
+    $Networks = @($Networks)
+
+    # Cluster traffic (heartbeat) uses networks with the role 'Cluster only' or 'Cluster and client'.
+    $ClusterNetworks = @($Networks | Where-Object { $_.RoleKey -in 'ClusterOnly', 'ClusterAndClient' -and $_.State -eq 'Up' })
+    $MigrationNetworks = @($Networks | Where-Object { $_.AllowedForMigration })
+
+    $Findings = New-Object -TypeName System.Collections.Generic.List[String]
+    if ($Networks.Count -gt 0 -and $MigrationNetworks.Count -eq 0) {
+        $Findings.Add('NoMigrationNetwork')
+    }
+    if ($ClusterNetworks.Count -lt 2) {
+        $Findings.Add('SingleClusterNetwork')
+    }
+
+    [PSCustomObject]@{
+        Networks = $Networks
+        ClusterNetworkCount = $ClusterNetworks.Count
+        MigrationNetworks = [String[]]@($MigrationNetworks | Sort-Object -Property @{ Expression = {
+                    if ($null -ne $_.MigrationOrder) { $_.MigrationOrder } else { [int]::MaxValue } }
+            }, Name | ForEach-Object { $_.Name })
+        Findings = [String[]]$Findings.ToArray()
+    }
+}
+
 function ConvertTo-HvDisplayValue {
     <#
     .SYNOPSIS

@@ -33,7 +33,9 @@
             "NodeOSBuildConsistency": true,
             "QuorumWitness": true,
             "QuorumWitnessState": true,
-            "DynamicQuorum": true
+            "DynamicQuorum": true,
+            "NetworkState": true,
+            "NetworkRedundancy": true
         }
     }
 }

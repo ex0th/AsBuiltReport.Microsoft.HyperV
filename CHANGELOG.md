@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health checks for node reachability, Hyper-V role, node state and OS build consistency between nodes
 - `Cluster Quorum` section with quorum model, witness (disk, file share or cloud) and the assigned and current vote of every node; node votes are no longer listed in the cluster overview
 - Health checks for a missing quorum witness (critical for two voting nodes), a witness that is not online and disabled dynamic quorum
+- `Cluster Networks` section with role, state, subnets and live migration use of every cluster network, and the network interfaces of every node
+- Health checks for cluster networks and interfaces that are not up and for clusters with fewer than two networks for cluster communication
 - Detection evidence for the Hyper-V role per host, physical disk resources, Cluster Shared Volumes, Scale-Out File Server roles and SMB shares that hold virtual hard disks
 - Readable values for the cluster functional level and the auto balancer mode and level
 - en-US and de-DE language files; fixed wording in the detection evidence is translated as well

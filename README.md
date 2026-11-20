@@ -201,6 +201,8 @@ The **Healthcheck** schema is used to toggle health checks on or off.
 | Cluster.QuorumWitness           | true / false | true    | Highlights clusters without a quorum witness (critical for two voting nodes) | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Cluster.QuorumWitnessState      | true / false | true    | Highlights a witness resource that is not online                             | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state |
 | Cluster.DynamicQuorum           | true / false | true    | Highlights clusters with dynamic quorum disabled                             | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Cluster.NetworkState            | true / false | true    | Highlights cluster networks and interfaces that are down or failed (critical) or otherwise not up (warning) | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Cluster.NetworkRedundancy       | true / false | true    | Highlights clusters with fewer than two networks for cluster communication   | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/examples.svg" alt="" width="24" height="24" align="top"> Examples
 <!-- ********** Add some examples. Use other AsBuiltReport modules as a guide. ********** -->
@@ -226,7 +228,7 @@ The report follows the PScribo conventions used across AsBuiltReport modules, so
 
 | Area | Planned content |
 |---|---|
-| Cluster | Cluster networks and roles, Live Migration settings, Cluster-Aware Updating |
+| Cluster | Cluster roles, Live Migration settings, Cluster-Aware Updating |
 | Host | Hardware, OS build, Hyper-V host settings (paths, NUMA spanning, migration), physical NICs |
 | Networking | Virtual switches including SET, host vNICs, RDMA, DCB/QoS (PFC, ETS) |
 | Storage: S2D / Azure Local | Storage pool, physical disks and cache, virtual disks with resiliency and tiers, fault domains |

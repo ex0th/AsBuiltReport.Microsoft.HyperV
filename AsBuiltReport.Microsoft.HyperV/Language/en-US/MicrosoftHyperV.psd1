@@ -206,4 +206,39 @@ GetAbrHvClusterQuorum = ConvertFrom-StringData @'
     DynamicQuorumBP = Dynamic quorum is disabled. With dynamic quorum, the cluster adjusts the votes when nodes fail and can survive the sequential failure of all but one node. Enable dynamic quorum unless there is a specific reason not to.
 '@
 
+# Get-AbrHvClusterNetwork
+GetAbrHvClusterNetwork = ConvertFrom-StringData @'
+    InfoLevel = Cluster InfoLevel set at {0}.
+    Collecting = Collecting cluster network information for {0}.
+    Heading = Cluster Networks
+    HeadingNetworks = Networks
+    HeadingInterfaces = Network Interfaces
+    ParagraphSummary = The following sections detail the networks of cluster {0} and the network interfaces of its nodes.
+    ParagraphInterfaces = The following table lists the network interfaces that the nodes of cluster {0} use for the cluster networks.
+    TableNetworks = Cluster Networks
+    TableNetwork = Cluster Network
+    TableInterfaces = Network Interfaces
+    NetworkName = Name
+    Role = Role
+    State = State
+    Subnets = Subnets
+    LiveMigration = Live Migration
+    MigrationOrder = Live Migration Preference
+    Metric = Metric
+    AutoMetric = Automatic Metric
+    Description = Description
+    Node = Node
+    Network = Network
+    Adapter = Adapter
+    Address = Address
+    Dhcp = DHCP
+    RoleNone = None
+    RoleClusterOnly = Cluster only
+    RoleClientOnly = Client only
+    RoleClusterAndClient = Cluster and client
+    HealthCheck = Health Check:
+    NetworkStateBP = The following cluster networks or network interfaces are not up: {0}. Check the physical links, switch ports and IP configuration of the affected adapters.
+    NetworkRedundancyBP = The cluster has {0} network(s) for cluster communication in the Up state. With a single network, a failure of that network isolates the nodes from each other. Configure at least two networks that allow cluster communication.
+'@
+
 }

@@ -207,4 +207,39 @@ GetAbrHvClusterQuorum = ConvertFrom-StringData @'
     DynamicQuorumBP = Das dynamische Quorum ist deaktiviert. Mit dynamischem Quorum passt der Cluster die Stimmen bei Knotenausfällen an und übersteht den aufeinanderfolgenden Ausfall aller Knoten bis auf einen. Aktivieren Sie das dynamische Quorum, sofern es keinen bestimmten Grund dagegen gibt.
 '@
 
+# Get-AbrHvClusterNetwork
+GetAbrHvClusterNetwork = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für Cluster ist auf {0} gesetzt.
+    Collecting = Informationen zu den Clusternetzwerken von {0} werden gesammelt.
+    Heading = Clusternetzwerke
+    HeadingNetworks = Netzwerke
+    HeadingInterfaces = Netzwerkschnittstellen
+    ParagraphSummary = Die folgenden Abschnitte beschreiben die Netzwerke des Clusters {0} und die Netzwerkschnittstellen seiner Knoten.
+    ParagraphInterfaces = Die folgende Tabelle listet die Netzwerkschnittstellen auf, die die Knoten des Clusters {0} für die Clusternetzwerke verwenden.
+    TableNetworks = Clusternetzwerke
+    TableNetwork = Clusternetzwerk
+    TableInterfaces = Netzwerkschnittstellen
+    NetworkName = Name
+    Role = Rolle
+    State = Status
+    Subnets = Subnetze
+    LiveMigration = Livemigration
+    MigrationOrder = Priorität für Livemigration
+    Metric = Metrik
+    AutoMetric = Automatische Metrik
+    Description = Beschreibung
+    Node = Knoten
+    Network = Netzwerk
+    Adapter = Adapter
+    Address = Adresse
+    Dhcp = DHCP
+    RoleNone = Keine
+    RoleClusterOnly = Nur Cluster
+    RoleClusterAndClient = Cluster und Client
+    RoleClientOnly = Nur Client
+    HealthCheck = Integritätsprüfung:
+    NetworkStateBP = Die folgenden Clusternetzwerke oder Netzwerkschnittstellen sind nicht aktiv: {0}. Prüfen Sie die physischen Verbindungen, die Switchports und die IP-Konfiguration der betroffenen Adapter.
+    NetworkRedundancyBP = Der Cluster hat {0} Netzwerk(e) für die Clusterkommunikation im Status Up. Bei nur einem Netzwerk trennt ein Ausfall dieses Netzwerks die Knoten voneinander. Konfigurieren Sie mindestens zwei Netzwerke, die Clusterkommunikation zulassen.
+'@
+
 }
