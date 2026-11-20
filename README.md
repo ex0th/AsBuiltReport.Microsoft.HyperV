@@ -184,10 +184,11 @@ There are 6 levels (0-5) of detail granularity for each section as follows;
 
 The table below outlines the default and maximum InfoLevel settings for each section.
 
-| Sub-Schema  | Default Setting | Maximum Setting |
-|-------------|:---------------:|:---------------:|
-| Environment |        1        |        2        |
-| Cluster     |        1        |        2        |
+| Sub-Schema    | Default Setting | Maximum Setting |
+|---------------|:---------------:|:---------------:|
+| Environment   |        1        |        2        |
+| Cluster       |        1        |        2        |
+| LiveMigration |        1        |        2        |
 
 ### Healthcheck
 The **Healthcheck** schema is used to toggle health checks on or off.
@@ -203,6 +204,9 @@ The **Healthcheck** schema is used to toggle health checks on or off.
 | Cluster.DynamicQuorum           | true / false | true    | Highlights clusters with dynamic quorum disabled                             | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Cluster.NetworkState            | true / false | true    | Highlights cluster networks and interfaces that are down or failed (critical) or otherwise not up (warning) | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Cluster.NetworkRedundancy       | true / false | true    | Highlights clusters with fewer than two networks for cluster communication   | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| LiveMigration.MigrationNetwork  | true / false | true    | Highlights clusters that exclude every cluster network from live migration   | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state |
+| LiveMigration.HostMigrationEnabled | true / false | true | Highlights hosts with incoming and outgoing live migrations disabled         | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| LiveMigration.SettingsConsistency | true / false | true  | Highlights live migration settings that differ between hosts                 | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/examples.svg" alt="" width="24" height="24" align="top"> Examples
 <!-- ********** Add some examples. Use other AsBuiltReport modules as a guide. ********** -->
@@ -228,7 +232,7 @@ The report follows the PScribo conventions used across AsBuiltReport modules, so
 
 | Area | Planned content |
 |---|---|
-| Cluster | Cluster roles, Live Migration settings, Cluster-Aware Updating |
+| Cluster | Cluster roles, Cluster-Aware Updating |
 | Host | Hardware, OS build, Hyper-V host settings (paths, NUMA spanning, migration), physical NICs |
 | Networking | Virtual switches including SET, host vNICs, RDMA, DCB/QoS (PFC, ETS) |
 | Storage: S2D / Azure Local | Storage pool, physical disks and cache, virtual disks with resiliency and tiers, fault domains |

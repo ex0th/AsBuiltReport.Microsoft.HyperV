@@ -242,4 +242,44 @@ GetAbrHvClusterNetwork = ConvertFrom-StringData @'
     NetworkRedundancyBP = Der Cluster hat {0} Netzwerk(e) für die Clusterkommunikation im Status Up. Bei nur einem Netzwerk trennt ein Ausfall dieses Netzwerks die Knoten voneinander. Konfigurieren Sie mindestens zwei Netzwerke, die Clusterkommunikation zulassen.
 '@
 
+# Get-AbrHvLiveMigration
+GetAbrHvLiveMigration = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für LiveMigration ist auf {0} gesetzt.
+    Collecting = Informationen zur Livemigration von {0} werden gesammelt.
+    HostFailed = Die Livemigrationseinstellungen von '{0}' konnten nicht gesammelt werden: {1}
+    Heading = Livemigration
+    HeadingCluster = Livemigrationseinstellungen des Clusters
+    HeadingHosts = Livemigrationseinstellungen der Hosts
+    ParagraphSummary = Die folgenden Abschnitte beschreiben die Livemigrationskonfiguration von {0}.
+    ParagraphCluster = Die folgende Tabelle zeigt die Livemigrationseinstellungen, die der Cluster {0} auf die geclusterten virtuellen Computer anwendet.
+    ParagraphHosts = Der folgende Abschnitt zeigt die Livemigrationseinstellungen in der Hyper-V-Konfiguration jedes Hosts. Für geclusterte virtuelle Computer legen die Clustereinstellungen fest, welche Netzwerke verwendet werden.
+    TableCluster = Livemigrationseinstellungen des Clusters
+    TableHosts = Livemigrationseinstellungen der Hosts
+    TableHost = Livemigrationseinstellungen des Hosts
+    MigrationNetworks = Netzwerke für Livemigration
+    ExcludedNetworks = Ausgeschlossene Netzwerke
+    ParallelMigrations = Maximale parallele Migrationen
+    ClusterSmbLimit = SMB-Bandbreitenlimit durch Cluster gesetzt
+    ClusterSmbLimitFactor = Faktor des SMB-Bandbreitenlimits
+    HostName = Host
+    Enabled = Livemigration aktiviert
+    MaxMigrations = Gleichzeitige Livemigrationen
+    MaxStorageMigrations = Gleichzeitige Speichermigrationen
+    Authentication = Authentifizierung
+    PerformanceOption = Leistungsoption
+    UseAnyNetwork = Beliebiges Netzwerk verwenden
+    HostMigrationNetworks = Migrationsnetzwerke
+    SmbLimit = SMB-Bandbreitenlimit
+    PerformanceTCPIP = TCP/IP
+    PerformanceCompression = Komprimierung
+    PerformanceSMB = SMB
+    ValueNone = Keine
+    ValueNoLimit = Kein Limit
+    ValueMbps = {0} Mbit/s
+    HealthCheck = Integritätsprüfung:
+    MigrationNetworkBP = Alle Clusternetzwerke sind von der Livemigration ausgeschlossen, daher können geclusterte virtuelle Computer nicht live migriert werden. Lassen Sie in den Livemigrationseinstellungen des Clusters mindestens ein Netzwerk zu, vorzugsweise ein dediziertes Netzwerk.
+    HostMigrationEnabledBP = Eingehende und ausgehende Livemigrationen sind in den Hyper-V-Einstellungen der folgenden Hosts deaktiviert: {0}. Aktivieren Sie die Livemigration, wenn diese Hosts laufende virtuelle Computer verschieben sollen.
+    SettingsConsistencyBP = Die folgenden Livemigrationseinstellungen unterscheiden sich zwischen den Hosts: {0} (Hosts: {1}). Verwenden Sie auf allen Hosts dieselben Einstellungen, damit sich Migrationen in jede Richtung gleich verhalten.
+'@
+
 }

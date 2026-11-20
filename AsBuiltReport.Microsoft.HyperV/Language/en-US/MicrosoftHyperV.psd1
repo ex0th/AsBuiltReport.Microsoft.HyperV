@@ -241,4 +241,44 @@ GetAbrHvClusterNetwork = ConvertFrom-StringData @'
     NetworkRedundancyBP = The cluster has {0} network(s) for cluster communication in the Up state. With a single network, a failure of that network isolates the nodes from each other. Configure at least two networks that allow cluster communication.
 '@
 
+# Get-AbrHvLiveMigration
+GetAbrHvLiveMigration = ConvertFrom-StringData @'
+    InfoLevel = LiveMigration InfoLevel set at {0}.
+    Collecting = Collecting live migration information for {0}.
+    HostFailed = Unable to collect the live migration settings of '{0}': {1}
+    Heading = Live Migration
+    HeadingCluster = Cluster Live Migration Settings
+    HeadingHosts = Host Live Migration Settings
+    ParagraphSummary = The following sections detail the live migration configuration of {0}.
+    ParagraphCluster = The following table shows the live migration settings that cluster {0} applies to the clustered virtual machines.
+    ParagraphHosts = The following section shows the live migration settings in the Hyper-V configuration of every host. For clustered virtual machines, the cluster settings define which networks are used.
+    TableCluster = Cluster Live Migration Settings
+    TableHosts = Host Live Migration Settings
+    TableHost = Host Live Migration Settings
+    MigrationNetworks = Networks for Live Migration
+    ExcludedNetworks = Excluded Networks
+    ParallelMigrations = Maximum Parallel Migrations
+    ClusterSmbLimit = SMB Bandwidth Limit Set by Cluster
+    ClusterSmbLimitFactor = SMB Bandwidth Limit Factor
+    HostName = Host
+    Enabled = Live Migration Enabled
+    MaxMigrations = Simultaneous Live Migrations
+    MaxStorageMigrations = Simultaneous Storage Migrations
+    Authentication = Authentication
+    PerformanceOption = Performance Option
+    UseAnyNetwork = Use Any Network
+    HostMigrationNetworks = Migration Networks
+    SmbLimit = SMB Bandwidth Limit
+    PerformanceTCPIP = TCP/IP
+    PerformanceCompression = Compression
+    PerformanceSMB = SMB
+    ValueNone = None
+    ValueNoLimit = No limit
+    ValueMbps = {0} Mbit/s
+    HealthCheck = Health Check:
+    MigrationNetworkBP = Every cluster network is excluded from live migration, so clustered virtual machines cannot be live migrated. Allow at least one network, preferably a dedicated network, in the live migration settings of the cluster.
+    HostMigrationEnabledBP = Incoming and outgoing live migrations are disabled in the Hyper-V settings of the following hosts: {0}. Enable live migration if these hosts should move running virtual machines.
+    SettingsConsistencyBP = The following live migration settings differ between hosts: {0} (hosts: {1}). Use the same settings on all hosts so that migrations behave the same in every direction.
+'@
+
 }

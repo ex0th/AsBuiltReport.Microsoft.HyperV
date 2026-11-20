@@ -111,6 +111,13 @@ Describe 'Localization data' {
         }
     }
 
+    It 'provides display strings for every live migration performance option' {
+        $Section = $script:Template['GetAbrHvLiveMigration']
+        foreach ($Option in 'TCPIP', 'Compression', 'SMB') {
+            $Section.ContainsKey("Performance$Option") | Should -BeTrue -Because "Performance$Option is rendered for that option"
+        }
+    }
+
     # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
     # -AllowNullOrEmptyForEach switch.
     if ($script:LanguageFolders.Count -gt 0) {

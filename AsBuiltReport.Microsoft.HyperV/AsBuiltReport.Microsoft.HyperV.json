@@ -21,7 +21,8 @@
     "InfoLevel": {
         "_comment_": "0 = Disabled, 1 = Enabled / Summary, 2 = Adv Summary, 3 = Detailed, 4 = Adv Detailed, 5 = Comprehensive",
         "Environment": 1,
-        "Cluster": 1
+        "Cluster": 1,
+        "LiveMigration": 1
     },
     "HealthCheck": {
         "Environment": {
@@ -36,6 +37,11 @@
             "DynamicQuorum": true,
             "NetworkState": true,
             "NetworkRedundancy": true
+        },
+        "LiveMigration": {
+            "MigrationNetwork": true,
+            "HostMigrationEnabled": true,
+            "SettingsConsistency": true
         }
     }
 }

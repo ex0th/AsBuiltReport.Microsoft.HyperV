@@ -687,6 +687,63 @@ function Resolve-HvClusterNetwork {
     }
 }
 
+function Resolve-HvSettingDeviation {
+    <#
+    .SYNOPSIS
+        Finds settings that differ between hosts.
+    .DESCRIPTION
+        Pure function for node-to-node consistency checks. For every property, the value most hosts use is
+        the reference and every other value is a deviation. If no single value is the most common (for
+        example two hosts with different values), every host is reported, because the correct value
+        cannot be determined. Values are compared as text; collections are joined in their given order.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [Object[]] $InputObject,
+
+        [Parameter(Mandatory)]
+        [String[]] $Property,
+
+        [String] $NameProperty = 'Name'
+    )
+
+    $Items = @($InputObject | Where-Object { $_ })
+    if ($Items.Count -lt 2) {
+        return
+    }
+    foreach ($Name in $Property) {
+        $Values = foreach ($Item in $Items) {
+            $Value = $Item.$Name
+            $Text = if ($Value -is [System.Collections.IEnumerable] -and $Value -isnot [string]) {
+                (@($Value) | ForEach-Object { [string]$_ }) -join ';'
+            } else {
+                [string]$Value
+            }
+            [PSCustomObject]@{ Host = [string]$Item.$NameProperty; Value = $Text }
+        }
+        $Groups = @($Values | Group-Object -Property Value | Sort-Object -Property Count -Descending)
+        if ($Groups.Count -lt 2) {
+            continue
+        }
+        $Reference = if ($Groups[0].Count -gt $Groups[1].Count) { $Groups[0].Name } else { $null }
+        foreach ($Entry in @($Values | Where-Object { $null -eq $Reference -or $_.Value -ne $Reference })) {
+            [PSCustomObject]@{
+                Name = $Entry.Host
+                Property = $Name
+                Value = $Entry.Value
+                Reference = $Reference
+            }
+        }
+    }
+}
+
 function ConvertTo-HvDisplayValue {
     <#
     .SYNOPSIS
