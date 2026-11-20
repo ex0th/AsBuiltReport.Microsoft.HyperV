@@ -503,6 +503,98 @@ function Resolve-HvEnvironmentType {
     }
 }
 
+function Resolve-HvQuorumState {
+    <#
+    .SYNOPSIS
+        Evaluates the quorum configuration collected from a failover cluster.
+    .DESCRIPTION
+        Pure function without remote calls, so the evaluation can be unit tested with synthetic data.
+        Returns language-independent keys; the report section translates them for display.
+
+        QuorumModel: NodeMajority, NodeAndWitnessMajority, DiskOnly
+        WitnessType: None, Disk, FileShare, Cloud, Other
+        Findings:    NoWitnessTwoNodes, NoWitness, WitnessNotOnline, DynamicQuorumDisabled
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [PSObject] $QuorumData
+    )
+
+    $ResourceType = [string]$QuorumData.WitnessResourceType
+    $HasWitness = -not [string]::IsNullOrWhiteSpace([string]$QuorumData.WitnessName)
+    $WitnessType = if (-not $HasWitness) {
+        'None'
+    } else {
+        switch ($ResourceType) {
+            'Physical Disk' { 'Disk' }
+            'File Share Witness' { 'FileShare' }
+            'Cloud Witness' { 'Cloud' }
+            default { 'Other' }
+        }
+    }
+
+    # Windows Server 2012 R2 and later report 'Majority' (with or without witness) or 'DiskOnly';
+    # older clusters report the legacy names.
+    $QuorumType = [string]$QuorumData.QuorumType
+    $QuorumModel = if ($QuorumType -eq 'DiskOnly') {
+        'DiskOnly'
+    } elseif ($HasWitness) {
+        'NodeAndWitnessMajority'
+    } else {
+        'NodeMajority'
+    }
+
+    $Nodes = @($QuorumData.Nodes | Where-Object { $_ })
+    $VotingNodes = @($Nodes | Where-Object { [int]$_.NodeWeight -eq 1 })
+    $WitnessState = if ($HasWitness) { [string]$QuorumData.WitnessState } else { $null }
+    $DynamicQuorum = ([int]$QuorumData.DynamicQuorum -eq 1)
+
+    $LowerPriorityNodeName = $null
+    if ([int]$QuorumData.LowerQuorumPriorityNodeId -ne 0) {
+        $LowerPriorityNode = $Nodes | Where-Object { [string]$_.Id -eq [string]$QuorumData.LowerQuorumPriorityNodeId } |
+            Select-Object -First 1
+        $LowerPriorityNodeName = if ($LowerPriorityNode) {
+            [string]$LowerPriorityNode.Name
+        } else {
+            [string]$QuorumData.LowerQuorumPriorityNodeId
+        }
+    }
+
+    $Findings = New-Object -TypeName System.Collections.Generic.List[String]
+    if ($QuorumModel -ne 'DiskOnly' -and -not $HasWitness) {
+        # With two votes, dynamic quorum takes the vote from one node; losing the other node stops the cluster.
+        if ($VotingNodes.Count -eq 2) {
+            $Findings.Add('NoWitnessTwoNodes')
+        } else {
+            $Findings.Add('NoWitness')
+        }
+    }
+    if ($HasWitness -and $WitnessState -ne 'Online') {
+        $Findings.Add('WitnessNotOnline')
+    }
+    if (-not $DynamicQuorum) {
+        $Findings.Add('DynamicQuorumDisabled')
+    }
+
+    [PSCustomObject]@{
+        QuorumModel = $QuorumModel
+        WitnessType = $WitnessType
+        HasWitness = $HasWitness
+        WitnessState = $WitnessState
+        DynamicQuorum = $DynamicQuorum
+        WitnessHasVote = ($HasWitness -and [int]$QuorumData.WitnessDynamicWeight -eq 1)
+        VotingNodeCount = $VotingNodes.Count
+        LowerPriorityNodeName = $LowerPriorityNodeName
+        Findings = [String[]]$Findings.ToArray()
+    }
+}
+
 function ConvertTo-HvDisplayValue {
     <#
     .SYNOPSIS

@@ -30,7 +30,10 @@
         },
         "Cluster": {
             "NodeState": true,
-            "NodeOSBuildConsistency": true
+            "NodeOSBuildConsistency": true,
+            "QuorumWitness": true,
+            "QuorumWitnessState": true,
+            "DynamicQuorum": true
         }
     }
 }

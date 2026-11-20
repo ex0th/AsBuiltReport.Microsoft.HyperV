@@ -149,10 +149,12 @@
                 if ($HvEnvironment.IsCluster) {
                     # Cluster configuration and node summary
                     Get-AbrHvClusterOverview
+                    # Quorum model, witness and node votes
+                    Get-AbrHvClusterQuorum
                 }
 
                 # Planned sections (see README roadmap):
-                # Cluster: Quorum/Witness, Networks, Live Migration, Cluster-Aware Updating
+                # Cluster: Networks, Live Migration, Cluster-Aware Updating
                 # Host: Hardware, OS build, Hyper-V settings, NICs, SET switches, RDMA/DCB
                 # Storage by topology: S2D pool/virtual disks/cache/fault domains, iSCSI/FC/MPIO, SMB shares
                 # Consistency: node-to-node comparison as health checks

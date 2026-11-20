@@ -61,8 +61,6 @@
                                     State = [string]$_.State
                                     StatusInformation = [string]$_.StatusInformation
                                     DrainStatus = [string]$_.DrainStatus
-                                    NodeWeight = $_.NodeWeight
-                                    DynamicWeight = $_.DynamicWeight
                                     # Levels without a value ('Rack:', 'Chassis:') carry no information.
                                     FaultDomain = (@($_.FaultDomain | Where-Object { $_ -and $_ -notmatch ':\s*$' }) -join '; ')
                                     Manufacturer = [string]$_.Manufacturer
@@ -159,8 +157,6 @@
                         if ($InfoLevel.Cluster -ge 2) {
                             $InObj[$LocalizedData.NodeId] = ConvertTo-HvDisplayValue $Node.Id
                             $InObj[$LocalizedData.StatusInformation] = ConvertTo-HvDisplayValue $Node.StatusInformation
-                            $InObj[$LocalizedData.NodeWeight] = ConvertTo-HvDisplayValue $Node.NodeWeight
-                            $InObj[$LocalizedData.DynamicWeight] = ConvertTo-HvDisplayValue $Node.DynamicWeight
                             $InObj[$LocalizedData.FaultDomain] = ConvertTo-HvDisplayValue $Node.FaultDomain
                             $InObj[$LocalizedData.OSVersion] = ConvertTo-HvDisplayValue $Build.Caption
                             $InObj[$LocalizedData.SerialNumber] = ConvertTo-HvDisplayValue $Node.SerialNumber

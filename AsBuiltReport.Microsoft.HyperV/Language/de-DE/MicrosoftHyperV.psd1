@@ -155,14 +155,56 @@ GetAbrHvClusterOverview = ConvertFrom-StringData @'
     Model = Modell
     NodeId = Knoten-ID
     StatusInformation = Statusinformationen
-    NodeWeight = Knotengewichtung
-    DynamicWeight = Dynamische Gewichtung
     FaultDomain = Fehlerdomäne
     OSVersion = Betriebssystem
     SerialNumber = Seriennummer
     HealthCheck = Integritätsprüfung:
     NodeStateBP = Die folgenden Knoten haben nicht den Status Up: {0}. Ausgefallene oder angehaltene Knoten verringern die Failoverkapazität des Clusters.
     NodeBuildBP = Die folgenden Knoten verwenden einen anderen Betriebssystembuild als der Rest des Clusters ({1}): {0}. Halten Sie alle Knoten auf demselben kumulativen Update.
+'@
+
+# Get-AbrHvClusterQuorum
+GetAbrHvClusterQuorum = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für Cluster ist auf {0} gesetzt.
+    Collecting = Quoruminformationen für {0} werden gesammelt.
+    Heading = Clusterquorum
+    HeadingConfiguration = Quorumkonfiguration
+    HeadingVotes = Knotenstimmen
+    ParagraphSummary = Die folgenden Abschnitte beschreiben die Quorum- und Zeugenkonfiguration des Clusters {0}.
+    ParagraphVotes = Die folgende Tabelle zeigt die zugewiesene und die aktuelle Quorumstimme jedes Knotens des Clusters {0}. Mit dynamischem Quorum passt der Cluster die aktuellen Stimmen automatisch an.
+    TableConfiguration = Quorumkonfiguration
+    TableVotes = Knotenstimmen
+    QuorumModel = Quorummodell
+    WitnessType = Zeugentyp
+    WitnessResource = Zeugenressource
+    WitnessState = Zeugenstatus
+    WitnessSharePath = Pfad der Dateifreigabe
+    WitnessAccount = Speicherkonto
+    WitnessEndpoint = Endpunkt
+    WitnessOwnerNode = Besitzerknoten
+    WitnessVote = Zeuge hat Stimme
+    VotingNodes = Knoten mit Stimme
+    DynamicQuorum = Dynamisches Quorum
+    LowerPriorityNode = Knoten mit niedrigerer Quorumpriorität
+    ArbitrationTime = Quorum-Arbitrierungszeit (s)
+    WitnessWriteTimeout = Schreibtimeout der Zeugendatenbank (s)
+    ModelNodeMajority = Knotenmehrheit
+    ModelNodeAndWitnessMajority = Knoten- und Zeugenmehrheit
+    ModelDiskOnly = Nur Datenträger (veraltet)
+    WitnessNone = Keiner
+    WitnessDisk = Datenträgerzeuge
+    WitnessFileShare = Dateifreigabezeuge
+    WitnessCloud = Cloudzeuge
+    ValueNone = Keiner
+    NodeName = Name
+    State = Status
+    AssignedVote = Zugewiesene Stimme
+    CurrentVote = Aktuelle Stimme
+    HealthCheck = Integritätsprüfung:
+    NoWitnessTwoNodesBP = Der Cluster hat zwei stimmberechtigte Knoten und keinen Zeugen. Das dynamische Quorum entzieht einem Knoten die Stimme, daher geht der Cluster offline, wenn der Knoten mit der verbleibenden Stimme unerwartet ausfällt. Konfigurieren Sie einen Cloud-, Dateifreigabe- oder Datenträgerzeugen.
+    NoWitnessBP = Es ist kein Quorumzeuge konfiguriert. Microsoft empfiehlt für jeden Cluster einen Zeugen, da der dynamische Zeuge die Gesamtzahl der Stimmen ungerade hält. Konfigurieren Sie einen Cloud-, Dateifreigabe- oder Datenträgerzeugen.
+    WitnessStateBP = Die Zeugenressource '{0}' hat den Status {1}. Solange der Zeuge nicht online ist, zählt seine Stimme nicht, und der Cluster toleriert weniger Ausfälle.
+    DynamicQuorumBP = Das dynamische Quorum ist deaktiviert. Mit dynamischem Quorum passt der Cluster die Stimmen bei Knotenausfällen an und übersteht den aufeinanderfolgenden Ausfall aller Knoten bis auf einen. Aktivieren Sie das dynamische Quorum, sofern es keinen bestimmten Grund dagegen gibt.
 '@
 
 }

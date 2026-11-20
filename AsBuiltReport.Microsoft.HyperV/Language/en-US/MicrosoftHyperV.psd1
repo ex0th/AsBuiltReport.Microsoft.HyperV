@@ -154,14 +154,56 @@ GetAbrHvClusterOverview = ConvertFrom-StringData @'
     Model = Model
     NodeId = Node ID
     StatusInformation = Status Information
-    NodeWeight = Node Weight
-    DynamicWeight = Dynamic Weight
     FaultDomain = Fault Domain
     OSVersion = Operating System
     SerialNumber = Serial Number
     HealthCheck = Health Check:
     NodeStateBP = The following nodes are not in the Up state: {0}. Nodes that are down or paused reduce the failover capacity of the cluster.
     NodeBuildBP = The following nodes run a different OS build than the rest of the cluster ({1}): {0}. Keep all nodes on the same cumulative update.
+'@
+
+# Get-AbrHvClusterQuorum
+GetAbrHvClusterQuorum = ConvertFrom-StringData @'
+    InfoLevel = Cluster InfoLevel set at {0}.
+    Collecting = Collecting quorum information for {0}.
+    Heading = Cluster Quorum
+    HeadingConfiguration = Quorum Configuration
+    HeadingVotes = Node Votes
+    ParagraphSummary = The following sections detail the quorum and witness configuration of cluster {0}.
+    ParagraphVotes = The following table shows the assigned and the current quorum vote of every node of cluster {0}. With dynamic quorum, the cluster adjusts the current votes automatically.
+    TableConfiguration = Quorum Configuration
+    TableVotes = Node Votes
+    QuorumModel = Quorum Model
+    WitnessType = Witness Type
+    WitnessResource = Witness Resource
+    WitnessState = Witness State
+    WitnessSharePath = File Share Path
+    WitnessAccount = Storage Account
+    WitnessEndpoint = Endpoint
+    WitnessOwnerNode = Owner Node
+    WitnessVote = Witness Has Vote
+    VotingNodes = Nodes With Vote
+    DynamicQuorum = Dynamic Quorum
+    LowerPriorityNode = Lower Quorum Priority Node
+    ArbitrationTime = Quorum Arbitration Time (s)
+    WitnessWriteTimeout = Witness Database Write Timeout (s)
+    ModelNodeMajority = Node Majority
+    ModelNodeAndWitnessMajority = Node and Witness Majority
+    ModelDiskOnly = Disk Only (legacy)
+    WitnessNone = None
+    WitnessDisk = Disk Witness
+    WitnessFileShare = File Share Witness
+    WitnessCloud = Cloud Witness
+    ValueNone = None
+    NodeName = Name
+    State = State
+    AssignedVote = Assigned Vote
+    CurrentVote = Current Vote
+    HealthCheck = Health Check:
+    NoWitnessTwoNodesBP = The cluster has two voting nodes and no witness. Dynamic quorum removes the vote from one node, so the cluster goes offline if the node that holds the remaining vote fails unexpectedly. Configure a cloud, file share or disk witness.
+    NoWitnessBP = No quorum witness is configured. Microsoft recommends a witness for every cluster, because dynamic witness keeps the total number of votes odd. Configure a cloud, file share or disk witness.
+    WitnessStateBP = The witness resource '{0}' is in the state {1}. While the witness is not online, its vote does not count and the cluster tolerates fewer failures.
+    DynamicQuorumBP = Dynamic quorum is disabled. With dynamic quorum, the cluster adjusts the votes when nodes fail and can survive the sequential failure of all but one node. Enable dynamic quorum unless there is a specific reason not to.
 '@
 
 }
