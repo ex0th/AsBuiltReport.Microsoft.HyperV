@@ -23,38 +23,36 @@ jobs:
         # The module targets Windows PowerShell 5.1 (Desktop). pwsh on Windows stays for the unit tests and code coverage.
         os: [windows-latest]
         shell: [powershell, pwsh]
+    # Step-level 'shell' does not accept matrix expressions; job defaults do.
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up PowerShell Gallery
-        shell: ${{ matrix.shell }}
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 
       - name: Install Pester
-        shell: ${{ matrix.shell }}
         run: |
           Install-Module -Name Pester -MinimumVersion 5.0.0 -MaximumVersion 5.99.99 -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -Scope CurrentUser
 
       - name: Install PScribo
-        shell: ${{ matrix.shell }}
         run: |
           Install-Module -Name PScribo -MinimumVersion 0.11.1 -Repository PSGallery -Force -AllowClobber -Scope CurrentUser
 
       - name: Install PSScriptAnalyzer
-        shell: ${{ matrix.shell }}
         run: |
           Install-Module -Name PSScriptAnalyzer -MinimumVersion 1.0.0 -Repository PSGallery -Force -AllowClobber -Scope CurrentUser
 
       - name: Install AsBuiltReport.Core
-        shell: ${{ matrix.shell }}
         run: |
           Install-Module -Name AsBuiltReport.Core -MinimumVersion 1.6.4 -Repository PSGallery -Force -AllowClobber -Scope CurrentUser
 
       - name: Run Pester Tests
-        shell: ${{ matrix.shell }}
         run: |
           $CodeCoverageParam = @{}
           $OutputFormatParam = @{ OutputFormat = 'NUnitXml' }

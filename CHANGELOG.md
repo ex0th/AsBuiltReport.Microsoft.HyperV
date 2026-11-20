@@ -32,3 +32,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The OS build of each node is collected once during discovery instead of a second time for the cluster overview
 - `Invoke-Tests.ps1` now fails when a test file fails during discovery, and pins Pester to 5.x
 - The Pester workflow uses Pester 5.x and AsBuiltReport.Core 1.6.4 and runs on Windows only
+- The Pester workflow file was rejected by GitHub because step-level `shell` does not accept matrix expressions; the shell is now set in the job defaults
