@@ -68,17 +68,22 @@ This report is compatible with the following PowerShell versions;
 <!-- ********** Update supported PowerShell versions ********** -->
 | Windows PowerShell 5.1 |    PowerShell 7    |
 |:----------------------:|:------------------:|
-|   :white_check_mark:   |        :x:         |
+|   :white_check_mark:   | :white_check_mark: |
+
+PowerShell 7 is supported on Windows only. The data on the documented hosts is always collected by the Windows PowerShell 5.1 WinRM endpoint of each host, so the in-box `Hyper-V` and `FailoverClusters` modules are used there in either case.
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/language-support.svg" alt="" width="24" height="24" align="top"> Language Support
 <!-- ********** Update supported languages ********** -->
 The Microsoft Hyper-V As Built Report supports the following languages;
 
 - English (US) (Default)
+- German (Germany)
+
+The language is selected with `Report.Language` in the report configuration (`en-US` or `de-DE`).
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/system-requirements.svg" alt="" width="24" height="24" align="top"> System Requirements
 <!-- ********** Update system requirements ********** -->
-Windows PowerShell 5.1 and the following PowerShell modules are required for generating a Microsoft Hyper-V As Built Report.
+Windows PowerShell 5.1 or PowerShell 7 on Windows and the following PowerShell modules are required for generating a Microsoft Hyper-V As Built Report.
 
 - [AsBuiltReport.Core Module](https://www.powershellgallery.com/packages/AsBuiltReport.Core/)
 - [AsBuiltReport.Microsoft.HyperV Module](https://www.powershellgallery.com/packages/AsBuiltReport.Microsoft.HyperV/)

@@ -15,7 +15,7 @@
     ModuleVersion = '0.1.0'
 
     # Supported PSEditions
-    CompatiblePSEditions = @('Desktop')
+    CompatiblePSEditions = @('Desktop', 'Core')
 
     # ID used to uniquely identify this module
     GUID = '613897d4-a1f1-4282-b2ff-2d66fdb3efeb'
@@ -61,7 +61,7 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags = @('AsBuiltReport', 'Report', 'Microsoft', 'HyperV', 'Hyper-V', 'FailoverCluster', 'S2D', 'AzureLocal', 'Documentation', 'PScribo', 'PSEdition_Desktop', 'Windows')
+            Tags = @('AsBuiltReport', 'Report', 'Microsoft', 'HyperV', 'Hyper-V', 'FailoverCluster', 'S2D', 'AzureLocal', 'Documentation', 'PScribo', 'PSEdition_Desktop', 'PSEdition_Core', 'Windows')
 
             # A URL to the license for this module.
             LicenseUri = 'https://raw.githubusercontent.com/AsBuiltReport/AsBuiltReport.Microsoft.HyperV/master/LICENSE'

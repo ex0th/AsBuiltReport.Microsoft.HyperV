@@ -72,6 +72,17 @@ Describe 'Localization data' {
         }
     }
 
+    It 'provides a translation for every evidence value key' {
+        $Section = $script:Template['GetAbrHvEnvironmentType']
+        $HelperText = Get-Content -Path (Join-Path $script:ModuleFolder 'Src\Private\Helpers.ps1') -Raw
+        # Literal keys plus the keys assigned through variables ($Membership, $RoleState).
+        $ValueKeys = @([regex]::Matches($HelperText, "ValueKey = '(?<key>\w+)'") | ForEach-Object { $_.Groups['key'].Value }) +
+            @('Cluster', 'None', 'Installed', 'NotInstalled') | Sort-Object -Unique
+        foreach ($Key in $ValueKeys) {
+            $Section.ContainsKey("Value$Key") | Should -BeTrue -Because "evidence value key '$Key' needs a translation"
+        }
+    }
+
     It 'provides display strings for the mapped cluster property values' {
         $Section = $script:Template['GetAbrHvClusterOverview']
         foreach ($Key in 'AutoBalancerMode0', 'AutoBalancerMode1', 'AutoBalancerMode2', 'AutoBalancerLevel1', 'AutoBalancerLevel2', 'AutoBalancerLevel3') {
@@ -85,6 +96,13 @@ Describe 'Localization data' {
     # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
     # -AllowNullOrEmptyForEach switch.
     if ($script:LanguageFolders.Count -gt 0) {
+        It 'language <Name> is saved as UTF-8 with BOM' -TestCases $script:LanguageFolders {
+            param ($Name, $Path)
+            # Windows PowerShell 5.1 reads language files without BOM as ANSI, which breaks umlauts and accents.
+            $Bytes = [System.IO.File]::ReadAllBytes((Join-Path $Path 'MicrosoftHyperV.psd1'))
+            ($Bytes.Count -ge 3 -and $Bytes[0] -eq 0xEF -and $Bytes[1] -eq 0xBB -and $Bytes[2] -eq 0xBF) | Should -BeTrue
+        }
+
         It 'language <Name> has the same keys as en-US' -TestCases $script:LanguageFolders {
             param ($Name, $Path)
             $Localized = Import-LocalizedData -BaseDirectory (Split-Path -Path $Path -Parent) -UICulture $Name -FileName 'MicrosoftHyperV.psd1'

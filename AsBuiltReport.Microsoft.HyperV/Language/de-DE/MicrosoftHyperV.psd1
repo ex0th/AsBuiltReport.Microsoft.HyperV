@@ -1,0 +1,168 @@
+﻿# culture = 'de-DE'
+# Saved as UTF-8 with BOM: Windows PowerShell 5.1 reads files without BOM as ANSI.
+@{
+
+# Shared values used by helper functions
+HvCommon = ConvertFrom-StringData @'
+    Yes = Ja
+    No = Nein
+'@
+
+# Module-wide strings
+InvokeAsBuiltReportMicrosoftHyperV = ConvertFrom-StringData @'
+    FqdnRequired = Bitte verwenden Sie den vollqualifizierten Domänennamen (FQDN) des Clusters oder Hosts anstelle von '{0}'.
+    Connecting = Verbindung zu '{0}' wird hergestellt.
+    ClusterFound = Failovercluster '{0}' mit {1} Knoten gefunden.
+    StandaloneFound = '{0}' ist kein Clustermitglied und wird als eigenständiger Hyper-V-Host dokumentiert.
+    ClusterAlreadyDocumented = Ziel '{0}' wird übersprungen: Cluster '{1}' wurde bereits dokumentiert.
+    NodeUnreachable = Keine Verbindung zu Knoten '{0}' möglich: {1}
+    ProbeFailed = Die Datenerfassung auf '{0}' war unvollständig: {1}
+    EnvironmentDetected = '{0}' wurde als {1} erkannt (Speicher: {2}, Modus: {3}).
+    TargetFailed = '{0}' kann nicht dokumentiert werden: {1}
+    ParagraphTarget = Die folgenden Abschnitte beschreiben die Hyper-V-Konfiguration von {0}.
+'@
+
+# Get-AbrHvEnvironmentType
+GetAbrHvEnvironmentType = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für Umgebung ist auf {0} gesetzt.
+    Collecting = Informationen zum Umgebungstyp von {0} werden gesammelt.
+    Heading = Umgebungstyp
+    HeadingEvidence = Erkennungsnachweise
+    ParagraphSummary = Die folgende Tabelle fasst den erkannten Umgebungstyp und die Speichertopologie von {0} zusammen.
+    ParagraphEvidence = Die folgende Tabelle listet die Prüfungen auf, anhand derer der Umgebungstyp von {0} ermittelt wurde.
+    TableEnvironment = Umgebungstyp
+    TableEvidence = Erkennungsnachweise
+    EnvironmentType = Umgebungstyp
+    Platform = Plattform
+    DeploymentModel = Bereitstellungsmodell
+    DeploymentCluster = Failovercluster
+    DeploymentStandalone = Eigenständiger Host
+    StorageTopology = Speichertopologie
+    Nodes = Erreichbare Knoten
+    HyperVRole = Hyper-V-Rolle installiert
+    Mpio = Multipfad-E/A installiert
+    Rdma = RDMA-fähige Adapter aktiv
+    Dcb = Data Center Bridging installiert
+    SetSwitch = Switch Embedded Teaming
+    DetectionMode = Erkennungsmodus
+    DetectionAutomatic = Automatisch
+    DetectionOverride = Manuell festgelegt (Report-Konfiguration)
+    EnvStandalone = Eigenständiger Hyper-V-Host
+    EnvS2D = Failovercluster mit Storage Spaces Direct
+    EnvAzureLocal = Azure Local-Cluster
+    EnvThreeTier = Failovercluster mit gemeinsam genutztem Blockspeicher (3-Tier)
+    EnvSMB = Failovercluster mit SMB-Speicher
+    EnvMixed = Failovercluster mit gemischtem Speicher
+    EnvNoSharedStorage = Failovercluster ohne erkannten gemeinsamen Speicher
+    PlatformWindowsServer = Windows Server
+    PlatformAzureLocal = Azure Local
+    TopologyS2D = Storage Spaces Direct
+    TopologyiSCSI = iSCSI
+    TopologyFibreChannel = Fibre Channel
+    TopologySharedSAS = Shared SAS
+    TopologySMB = SMB 3-Dateifreigabe
+    TopologyLocal = Lokaler Speicher
+    IndicatesCluster = Failovercluster
+    IndicatesStandalone = Eigenständiger Host
+    IndicatesAzureLocal = Azure Local
+    Check = Prüfung
+    Scope = Bereich
+    Value = Wert
+    Indicates = Hinweis auf
+    CheckClusterMembership = Clustermitgliedschaft
+    CheckNodeReachability = Erreichbare Knoten
+    CheckHyperVRole = Hyper-V-Rolle
+    CheckOSEdition = Betriebssystem
+    CheckAzureRegistration = Azure-Registrierung
+    CheckS2DEnabled = Storage Spaces Direct aktiviert
+    CheckStoragePool = Geclusterter Speicherpool
+    CheckClusterDiskResource = Ressourcen vom Typ physischer Datenträger
+    CheckClusterSharedVolume = Cluster Shared Volumes
+    CheckScaleOutFileServer = Rollen für Dateiserver mit horizontaler Skalierung
+    CheckClusteredDisk = Geclusterte Datenträger nach Bustyp
+    CheckDataDisk = Datenträger nach Bustyp
+    CheckIscsiSession = iSCSI-Sitzungen
+    CheckFcInitiatorPort = Fibre Channel-Initiatorports
+    CheckVhdLocation = Speicherorte virtueller Festplatten
+    CheckDefaultVhdPath = Standardpfad für virtuelle Festplatten
+    CheckSmbShare = SMB-Freigaben mit virtuellen Festplatten
+    CheckOverride = Manuell festgelegte Speichertopologie
+    CheckMpioFeature = Feature Multipfad-E/A
+    CheckRdmaAdapter = RDMA-fähige Adapter
+    CheckDcbFeature = Feature Data Center Bridging
+    CheckSetSwitch = Virtuelle SET-Switches
+    ValueCluster = Cluster
+    ValueNone = Keine
+    ValueInstalled = Installiert
+    ValueNotInstalled = Nicht installiert
+    ValueVhdLocation = SMB {0}, CSV {1}, lokal {2}
+    ValueOverride = {0} (automatisch: {1})
+    HealthCheck = Integritätsprüfung:
+    NodeReachabilityBP = Nicht alle Hosts waren erreichbar. Abschnitte, die Daten pro Host benötigen, sind unvollständig. Prüfen Sie WinRM-Verbindung und Namensauflösung für die fehlenden Knoten.
+    HyperVRoleBP = Die Hyper-V-Rolle ist auf folgenden Hosts nicht installiert: {0}. Jeder Host, auf dem virtuelle Computer laufen, benötigt die Hyper-V-Rolle, und alle Knoten eines Clusters sollten dieselben Rollen bereitstellen.
+'@
+
+# Get-AbrHvClusterOverview
+GetAbrHvClusterOverview = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für Cluster ist auf {0} gesetzt.
+    Collecting = Informationen zum Failovercluster {0} werden gesammelt.
+    Heading = Clusterübersicht
+    HeadingConfiguration = Clusterkonfiguration
+    HeadingNodes = Clusterknoten
+    ParagraphSummary = Die folgenden Abschnitte beschreiben die Konfiguration des Failoverclusters {0}.
+    ParagraphNodes = Der folgende Abschnitt fasst die Knoten des Clusters {0} zusammen.
+    TableConfiguration = Clusterkonfiguration
+    TableNodes = Clusterknoten
+    TableNode = Clusterknoten
+    ClusterName = Clustername
+    Domain = Domäne
+    Fqdn = FQDN
+    Description = Beschreibung
+    NodeCount = Knoten
+    CsvCount = Cluster Shared Volumes
+    VMRoleCount = Rollen für virtuelle Computer
+    S2DEnabled = Storage Spaces Direct
+    FunctionalLevel = Funktionsebene des Clusters
+    UpgradeVersion = Upgradeversion des Clusters
+    SameSubnetDelay = Verzögerung im selben Subnetz (ms)
+    SameSubnetThreshold = Schwellenwert im selben Subnetz
+    CrossSubnetDelay = Verzögerung zwischen Subnetzen (ms)
+    CrossSubnetThreshold = Schwellenwert zwischen Subnetzen
+    ResiliencyLevel = Resilienzstufe
+    ResiliencyPeriod = Resilienzzeitraum (s)
+    QuarantineThreshold = Quarantäneschwellenwert
+    QuarantineDuration = Quarantänedauer (s)
+    DrainOnShutdown = Ausgleichen beim Herunterfahren
+    AutoBalancerMode = Modus des automatischen Lastenausgleichs
+    AutoBalancerLevel = Stufe des automatischen Lastenausgleichs
+    BlockCacheSize = CSV-Blockcache (MB)
+    SharedVolumesRoot = Stammverzeichnis der freigegebenen Volumes
+    AutoBalancerMode0 = Deaktiviert
+    AutoBalancerMode1 = Ausgleich beim Hinzufügen eines Knotens
+    AutoBalancerMode2 = Ausgleich beim Hinzufügen eines Knotens und alle 30 Minuten
+    AutoBalancerLevel1 = Niedrig
+    AutoBalancerLevel2 = Mittel
+    AutoBalancerLevel3 = Hoch
+    FunctionalLevel8 = Windows Server 2012 R2
+    FunctionalLevel9 = Windows Server 2016
+    FunctionalLevel10 = Windows Server 2019
+    FunctionalLevel11 = Windows Server 2022
+    FunctionalLevel12 = Windows Server 2025
+    NodeName = Name
+    State = Status
+    DrainStatus = Ausgleichsstatus
+    OSBuild = Betriebssystembuild
+    Model = Modell
+    NodeId = Knoten-ID
+    StatusInformation = Statusinformationen
+    NodeWeight = Knotengewichtung
+    DynamicWeight = Dynamische Gewichtung
+    FaultDomain = Fehlerdomäne
+    OSVersion = Betriebssystem
+    SerialNumber = Seriennummer
+    HealthCheck = Integritätsprüfung:
+    NodeStateBP = Die folgenden Knoten haben nicht den Status Up: {0}. Ausgefallene oder angehaltene Knoten verringern die Failoverkapazität des Clusters.
+    NodeBuildBP = Die folgenden Knoten verwenden einen anderen Betriebssystembuild als der Rest des Clusters ({1}): {0}. Halten Sie alle Knoten auf demselben kumulativen Update.
+'@
+
+}

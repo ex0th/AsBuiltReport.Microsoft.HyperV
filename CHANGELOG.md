@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health checks for node reachability, Hyper-V role, node state and OS build consistency between nodes
 - Detection evidence for the Hyper-V role per host, physical disk resources, Cluster Shared Volumes, Scale-Out File Server roles and SMB shares that hold virtual hard disks
 - Readable values for the cluster functional level and the auto balancer mode and level
-- en-US language file
+- en-US and de-DE language files; fixed wording in the detection evidence is translated as well
+- PowerShell 7 support on Windows (Windows PowerShell 5.1 remains supported); PSScriptAnalyzer checks the syntax for both versions
 - Pester tests for the environment classification, report configuration, report conventions and localization data
 
 ### Fixed

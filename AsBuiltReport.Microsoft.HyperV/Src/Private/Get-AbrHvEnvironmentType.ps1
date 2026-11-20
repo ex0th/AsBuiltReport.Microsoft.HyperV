@@ -65,10 +65,15 @@
                             } else {
                                 $null
                             }
+                            # Fixed wording (e.g. 'Installed') is translated via ValueKey; other values are shown as collected.
+                            $Value = $Item.Value
+                            if ($Item.ValueKey -and $LocalizedData["Value$($Item.ValueKey)"]) {
+                                $Value = $LocalizedData["Value$($Item.ValueKey)"] -f @($Item.ValueArgs)
+                            }
                             $EvidenceObj += [PSCustomObject][ordered]@{
                                 $LocalizedData.Check = $(if ($LocalizedData["Check$($Item.Check)"]) { $LocalizedData["Check$($Item.Check)"] } else { $Item.Check })
                                 $LocalizedData.Scope = ConvertTo-HvDisplayValue $Item.Scope
-                                $LocalizedData.Value = ConvertTo-HvDisplayValue $Item.Value
+                                $LocalizedData.Value = ConvertTo-HvDisplayValue $Value
                                 $LocalizedData.Indicates = ConvertTo-HvDisplayValue $Indicates
                             }
                         } catch {

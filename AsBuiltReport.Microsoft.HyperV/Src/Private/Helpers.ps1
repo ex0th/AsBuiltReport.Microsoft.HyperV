@@ -342,13 +342,16 @@ function Resolve-HvEnvironmentType {
     $ReachableNodes = @($NodeList | Where-Object { $_.Reachable })
     $TargetScope = if ($IsCluster) { $ClusterScope } else { [string]($NodeList | Select-Object -First 1).ComputerName }
 
-    $Evidence.Add([PSCustomObject]@{ Check = 'ClusterMembership'; Scope = $TargetScope; Value = $(if ($IsCluster) { 'Cluster' } else { 'None' }); Indicates = $(if ($IsCluster) { 'Cluster' } else { 'Standalone' }) })
+    # Evidence values are language-independent. ValueKey/ValueArgs let the report section translate fixed wording.
+    $Membership = if ($IsCluster) { 'Cluster' } else { 'None' }
+    $Evidence.Add([PSCustomObject]@{ Check = 'ClusterMembership'; Scope = $TargetScope; Value = $Membership; ValueKey = $Membership; Indicates = $(if ($IsCluster) { 'Cluster' } else { 'Standalone' }) })
     $Evidence.Add([PSCustomObject]@{ Check = 'NodeReachability'; Scope = $TargetScope; Value = ('{0}/{1}' -f $ReachableNodes.Count, $NodeList.Count); Indicates = '' })
 
     # Every documented host is expected to run the Hyper-V role.
     $NodesWithoutHyperV = @($ReachableNodes | Where-Object { -not $_.HyperVInstalled } | ForEach-Object { [string]$_.ComputerName })
     foreach ($Node in $ReachableNodes) {
-        $Evidence.Add([PSCustomObject]@{ Check = 'HyperVRole'; Scope = [string]$Node.ComputerName; Value = $(if ($Node.HyperVInstalled) { 'Installed' } else { 'Not installed' }); Indicates = '' })
+        $RoleState = if ($Node.HyperVInstalled) { 'Installed' } else { 'NotInstalled' }
+        $Evidence.Add([PSCustomObject]@{ Check = 'HyperVRole'; Scope = [string]$Node.ComputerName; Value = $RoleState; ValueKey = $RoleState; Indicates = '' })
     }
 
     # Platform: Azure Local (formerly Azure Stack HCI) reports its own edition on every node.
@@ -416,7 +419,8 @@ function Resolve-HvEnvironmentType {
                 $Detected.Add('SMB')
             }
         }
-        $Evidence.Add([PSCustomObject]@{ Check = 'VhdLocation'; Scope = [string]$Node.ComputerName; Value = ('SMB {0}, CSV {1}, Local {2}' -f $Node.VhdOnSmbCount, $Node.VhdOnCsvCount, $Node.VhdLocalCount); Indicates = $(if ($Node.VhdOnSmbCount -gt 0) { 'SMB' } else { '' }) })
+        $VhdCounts = @([int]$Node.VhdOnSmbCount, [int]$Node.VhdOnCsvCount, [int]$Node.VhdLocalCount)
+        $Evidence.Add([PSCustomObject]@{ Check = 'VhdLocation'; Scope = [string]$Node.ComputerName; Value = ('SMB {0}, CSV {1}, Local {2}' -f $VhdCounts); ValueKey = 'VhdLocation'; ValueArgs = $VhdCounts; Indicates = $(if ($Node.VhdOnSmbCount -gt 0) { 'SMB' } else { '' }) })
         if ($DefaultOnSmb) {
             $Evidence.Add([PSCustomObject]@{ Check = 'DefaultVhdPath'; Scope = [string]$Node.ComputerName; Value = [string]$Node.DefaultVhdPath; Indicates = 'SMB' })
         }
@@ -434,7 +438,8 @@ function Resolve-HvEnvironmentType {
     if ($Requested.Count -gt 0) {
         $Topologies = $Requested
         $DetectionMode = 'Override'
-        $Evidence.Add([PSCustomObject]@{ Check = 'Override'; Scope = $TargetScope; Value = ('{0} (auto: {1})' -f ($Requested -join ', '), ($Detected -join ', ')); Indicates = '' })
+        $OverrideArgs = @(($Requested -join ', '), ($Detected -join ', '))
+        $Evidence.Add([PSCustomObject]@{ Check = 'Override'; Scope = $TargetScope; Value = ('{0} (auto: {1})' -f $OverrideArgs); ValueKey = 'Override'; ValueArgs = $OverrideArgs; Indicates = '' })
     } else {
         $Topologies = @($Detected)
         $DetectionMode = 'Automatic'
@@ -464,13 +469,13 @@ function Resolve-HvEnvironmentType {
     # Feature flags drive which host networking and storage sections are relevant.
     foreach ($Node in $ReachableNodes) {
         if ($Node.MpioInstalled) {
-            $Evidence.Add([PSCustomObject]@{ Check = 'MpioFeature'; Scope = [string]$Node.ComputerName; Value = 'Installed'; Indicates = '' })
+            $Evidence.Add([PSCustomObject]@{ Check = 'MpioFeature'; Scope = [string]$Node.ComputerName; Value = 'Installed'; ValueKey = 'Installed'; Indicates = '' })
         }
         if (@($Node.RdmaAdapters).Count -gt 0) {
             $Evidence.Add([PSCustomObject]@{ Check = 'RdmaAdapter'; Scope = [string]$Node.ComputerName; Value = (@($Node.RdmaAdapters) -join ', '); Indicates = '' })
         }
         if ($Node.DcbInstalled) {
-            $Evidence.Add([PSCustomObject]@{ Check = 'DcbFeature'; Scope = [string]$Node.ComputerName; Value = 'Installed'; Indicates = '' })
+            $Evidence.Add([PSCustomObject]@{ Check = 'DcbFeature'; Scope = [string]$Node.ComputerName; Value = 'Installed'; ValueKey = 'Installed'; Indicates = '' })
         }
         if (@($Node.SetSwitches).Count -gt 0) {
             $Evidence.Add([PSCustomObject]@{ Check = 'SetSwitch'; Scope = [string]$Node.ComputerName; Value = (@($Node.SetSwitches) -join ', '); Indicates = '' })

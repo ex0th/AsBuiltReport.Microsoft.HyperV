@@ -49,8 +49,9 @@ Write-Host "Tests Path: $TestsPath" -ForegroundColor Cyan
 $PSVersion = $PSVersionTable.PSVersion
 Write-Host "PowerShell Version: $PSVersion" -ForegroundColor Cyan
 
-if ($PSVersion.Major -lt 7) {
-    Write-Warning "PowerShell 7 or higher is recommended for optimal test execution"
+# The module supports Windows PowerShell 5.1 and PowerShell 7; run the tests in both before a release.
+if ($PSVersion.Major -lt 5 -or ($PSVersion.Major -eq 5 -and $PSVersion.Minor -lt 1)) {
+    Write-Warning "Windows PowerShell 5.1 or PowerShell 7 is required"
 }
 
 # Install required modules
