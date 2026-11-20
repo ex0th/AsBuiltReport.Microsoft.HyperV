@@ -1,0 +1,98 @@
+# Checks the language files:
+# - every string a function reads via $LocalizedData.<Key> exists in the en-US template
+# - every other language has exactly the same keys as en-US
+#
+# A missing string renders as an empty label or heading, which is easy to miss when testing in one language.
+#
+# Run from the repository root: Invoke-Pester -Path .\Tests\LocalizationData.Tests.ps1
+
+BeforeDiscovery {
+    $script:ModuleFolder = Join-Path $PSScriptRoot '..\AsBuiltReport.Microsoft.HyperV'
+    $script:FunctionFiles = @(Get-ChildItem -Path (Join-Path $script:ModuleFolder 'Src') -Filter '*.ps1' -Recurse |
+            Where-Object { (Get-Content -Path $_.FullName -Raw) -match '\$LocalizedData = \$reportTranslate\.\w+' } |
+            ForEach-Object { @{ Name = $_.Name; Path = $_.FullName } })
+    $script:LanguageFolders = @(Get-ChildItem -Path (Join-Path $script:ModuleFolder 'Language') -Directory |
+            Where-Object { $_.Name -ne 'en-US' } |
+            ForEach-Object { @{ Name = $_.Name; Path = $_.FullName } })
+}
+
+BeforeAll {
+    $script:ModuleFolder = Join-Path $PSScriptRoot '..\AsBuiltReport.Microsoft.HyperV'
+    $script:Template = Import-LocalizedData -BaseDirectory (Join-Path $script:ModuleFolder 'Language') -UICulture 'en-US' -FileName 'MicrosoftHyperV.psd1'
+}
+
+Describe 'Localization data' {
+
+    It 'loads the en-US template' {
+        $script:Template | Should -Not -BeNullOrEmpty
+    }
+
+    It '<Name> only uses strings that exist in en-US' -TestCases $script:FunctionFiles {
+        param ($Name, $Path)
+        $Text = Get-Content -Path $Path -Raw
+        $SectionMatch = [regex]::Match($Text, '\$LocalizedData = \$reportTranslate\.(?<section>\w+)')
+        $SectionMatch.Success | Should -BeTrue -Because 'functions bind their strings with $LocalizedData = $reportTranslate.<Section>'
+        $Section = $script:Template[$SectionMatch.Groups['section'].Value]
+        $Section | Should -Not -BeNullOrEmpty -Because "section '$($SectionMatch.Groups['section'].Value)' must exist in en-US"
+
+        # Static keys only; keys built at runtime (e.g. "Env$Type") are covered by the classification tests.
+        $Keys = @([regex]::Matches($Text, '\$LocalizedData\.(?<key>\w+)') | ForEach-Object { $_.Groups['key'].Value }) +
+            @([regex]::Matches($Text, '\$LocalizedData\[''(?<key>\w+)''\]') | ForEach-Object { $_.Groups['key'].Value }) |
+            Sort-Object -Unique
+        foreach ($Key in $Keys) {
+            $Section.ContainsKey($Key) | Should -BeTrue -Because "'$Key' is used in $Name"
+        }
+    }
+
+    It 'provides display strings for every environment type and storage topology' {
+        $Section = $script:Template['GetAbrHvEnvironmentType']
+        foreach ($Type in 'Standalone', 'S2D', 'AzureLocal', 'ThreeTier', 'SMB', 'Mixed', 'NoSharedStorage') {
+            $Section.ContainsKey("Env$Type") | Should -BeTrue -Because "Env$Type is rendered for that environment type"
+        }
+        foreach ($Topology in 'S2D', 'iSCSI', 'FibreChannel', 'SharedSAS', 'SMB', 'Local') {
+            $Section.ContainsKey("Topology$Topology") | Should -BeTrue -Because "Topology$Topology is rendered for that storage topology"
+        }
+        foreach ($Platform in 'WindowsServer', 'AzureLocal') {
+            $Section.ContainsKey("Platform$Platform") | Should -BeTrue
+        }
+        foreach ($Mode in 'Automatic', 'Override') {
+            $Section.ContainsKey("Detection$Mode") | Should -BeTrue
+        }
+    }
+
+    It 'provides a label for every detection check' {
+        $Section = $script:Template['GetAbrHvEnvironmentType']
+        $HelperText = Get-Content -Path (Join-Path $script:ModuleFolder 'Src\Private\Helpers.ps1') -Raw
+        $Checks = @([regex]::Matches($HelperText, "Check = '(?<check>\w+)'") | ForEach-Object { $_.Groups['check'].Value }) +
+            @([regex]::Matches($HelperText, "'(?<check>ClusteredDisk|DataDisk)'") | ForEach-Object { $_.Groups['check'].Value }) |
+            Sort-Object -Unique
+        $Checks.Count | Should -BeGreaterThan 0
+        foreach ($Check in $Checks) {
+            $Section.ContainsKey("Check$Check") | Should -BeTrue -Because "evidence check '$Check' needs a label"
+        }
+    }
+
+    It 'provides display strings for the mapped cluster property values' {
+        $Section = $script:Template['GetAbrHvClusterOverview']
+        foreach ($Key in 'AutoBalancerMode0', 'AutoBalancerMode1', 'AutoBalancerMode2', 'AutoBalancerLevel1', 'AutoBalancerLevel2', 'AutoBalancerLevel3') {
+            $Section.ContainsKey($Key) | Should -BeTrue -Because "$Key is rendered for that cluster setting"
+        }
+        foreach ($Level in 8..12) {
+            $Section.ContainsKey("FunctionalLevel$Level") | Should -BeTrue -Because "FunctionalLevel$Level is rendered for that level"
+        }
+    }
+
+    # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
+    # -AllowNullOrEmptyForEach switch.
+    if ($script:LanguageFolders.Count -gt 0) {
+        It 'language <Name> has the same keys as en-US' -TestCases $script:LanguageFolders {
+            param ($Name, $Path)
+            $Localized = Import-LocalizedData -BaseDirectory (Split-Path -Path $Path -Parent) -UICulture $Name -FileName 'MicrosoftHyperV.psd1'
+            foreach ($SectionName in $script:Template.Keys) {
+                $Localized.ContainsKey($SectionName) | Should -BeTrue -Because "section '$SectionName' is missing in $Name"
+                $Missing = @($script:Template[$SectionName].Keys | Where-Object { -not $Localized[$SectionName].ContainsKey($_) })
+                $Missing | Should -BeNullOrEmpty -Because "keys missing in $Name/$SectionName"
+            }
+        }
+    }
+}

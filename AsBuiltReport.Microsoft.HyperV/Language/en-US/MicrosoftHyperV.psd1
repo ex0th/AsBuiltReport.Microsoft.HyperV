@@ -1,0 +1,161 @@
+# culture = 'en-US'
+@{
+
+# Shared values used by helper functions
+HvCommon = ConvertFrom-StringData @'
+    Yes = Yes
+    No = No
+'@
+
+# Module-wide strings
+InvokeAsBuiltReportMicrosoftHyperV = ConvertFrom-StringData @'
+    FqdnRequired = Please use the fully qualified domain name (FQDN) of the cluster or host instead of '{0}'.
+    Connecting = Connecting to '{0}'.
+    ClusterFound = Failover cluster '{0}' with {1} node(s) found.
+    StandaloneFound = '{0}' is not a cluster member. Documenting it as a standalone Hyper-V host.
+    ClusterAlreadyDocumented = Skipping target '{0}': cluster '{1}' has already been documented.
+    NodeUnreachable = Unable to connect to node '{0}': {1}
+    ProbeFailed = Data collection on '{0}' was incomplete: {1}
+    EnvironmentDetected = '{0}' detected as {1} (storage: {2}, mode: {3}).
+    TargetFailed = Unable to document '{0}': {1}
+    ParagraphTarget = The following sections detail the Hyper-V configuration of {0}.
+'@
+
+# Get-AbrHvEnvironmentType
+GetAbrHvEnvironmentType = ConvertFrom-StringData @'
+    InfoLevel = Environment InfoLevel set at {0}.
+    Collecting = Collecting environment type information for {0}.
+    Heading = Environment Type
+    HeadingEvidence = Detection Evidence
+    ParagraphSummary = The following table summarises the detected environment type and storage topology of {0}.
+    ParagraphEvidence = The following table lists the checks used to determine the environment type of {0}.
+    TableEnvironment = Environment Type
+    TableEvidence = Detection Evidence
+    EnvironmentType = Environment Type
+    Platform = Platform
+    DeploymentModel = Deployment Model
+    DeploymentCluster = Failover Cluster
+    DeploymentStandalone = Standalone Host
+    StorageTopology = Storage Topology
+    Nodes = Reachable Nodes
+    HyperVRole = Hyper-V Role Installed
+    Mpio = Multipath I/O Installed
+    Rdma = RDMA Enabled Adapters
+    Dcb = Data Center Bridging Installed
+    SetSwitch = Switch Embedded Teaming
+    DetectionMode = Detection Mode
+    DetectionAutomatic = Automatic
+    DetectionOverride = Manual override (report configuration)
+    EnvStandalone = Standalone Hyper-V host
+    EnvS2D = Failover cluster with Storage Spaces Direct
+    EnvAzureLocal = Azure Local cluster
+    EnvThreeTier = Failover cluster with shared block storage (3-tier)
+    EnvSMB = Failover cluster with SMB storage
+    EnvMixed = Failover cluster with mixed storage
+    EnvNoSharedStorage = Failover cluster without detected shared storage
+    PlatformWindowsServer = Windows Server
+    PlatformAzureLocal = Azure Local
+    TopologyS2D = Storage Spaces Direct
+    TopologyiSCSI = iSCSI
+    TopologyFibreChannel = Fibre Channel
+    TopologySharedSAS = Shared SAS
+    TopologySMB = SMB 3 file share
+    TopologyLocal = Local storage
+    IndicatesCluster = Failover Cluster
+    IndicatesStandalone = Standalone Host
+    IndicatesAzureLocal = Azure Local
+    Check = Check
+    Scope = Scope
+    Value = Value
+    Indicates = Indicates
+    CheckClusterMembership = Cluster membership
+    CheckNodeReachability = Reachable nodes
+    CheckHyperVRole = Hyper-V role
+    CheckOSEdition = Operating system
+    CheckAzureRegistration = Azure registration
+    CheckS2DEnabled = Storage Spaces Direct enabled
+    CheckStoragePool = Clustered storage pool
+    CheckClusterDiskResource = Physical disk resources
+    CheckClusterSharedVolume = Cluster Shared Volumes
+    CheckScaleOutFileServer = Scale-Out File Server roles
+    CheckClusteredDisk = Clustered disks by bus type
+    CheckDataDisk = Data disks by bus type
+    CheckIscsiSession = iSCSI sessions
+    CheckFcInitiatorPort = Fibre Channel initiator ports
+    CheckVhdLocation = Virtual hard disk locations
+    CheckDefaultVhdPath = Default virtual hard disk path
+    CheckSmbShare = SMB shares with virtual hard disks
+    CheckOverride = Storage topology override
+    CheckMpioFeature = Multipath I/O feature
+    CheckRdmaAdapter = RDMA enabled adapters
+    CheckDcbFeature = Data Center Bridging feature
+    CheckSetSwitch = SET virtual switches
+    HealthCheck = Health Check:
+    NodeReachabilityBP = Not all hosts could be reached. Sections that depend on per-host data are incomplete. Check WinRM connectivity and name resolution for the missing nodes.
+    HyperVRoleBP = The Hyper-V role is not installed on the following hosts: {0}. Every host that runs virtual machines needs the Hyper-V role, and all nodes of a cluster should provide the same roles.
+'@
+
+# Get-AbrHvClusterOverview
+GetAbrHvClusterOverview = ConvertFrom-StringData @'
+    InfoLevel = Cluster InfoLevel set at {0}.
+    Collecting = Collecting failover cluster information for {0}.
+    Heading = Cluster Overview
+    HeadingConfiguration = Cluster Configuration
+    HeadingNodes = Cluster Nodes
+    ParagraphSummary = The following sections detail the failover cluster configuration of {0}.
+    ParagraphNodes = The following section summarises the nodes of cluster {0}.
+    TableConfiguration = Cluster Configuration
+    TableNodes = Cluster Nodes
+    TableNode = Cluster Node
+    ClusterName = Cluster Name
+    Domain = Domain
+    Fqdn = FQDN
+    Description = Description
+    NodeCount = Nodes
+    CsvCount = Cluster Shared Volumes
+    VMRoleCount = Virtual Machine Roles
+    S2DEnabled = Storage Spaces Direct
+    FunctionalLevel = Cluster Functional Level
+    UpgradeVersion = Cluster Upgrade Version
+    SameSubnetDelay = Same Subnet Delay (ms)
+    SameSubnetThreshold = Same Subnet Threshold
+    CrossSubnetDelay = Cross Subnet Delay (ms)
+    CrossSubnetThreshold = Cross Subnet Threshold
+    ResiliencyLevel = Resiliency Level
+    ResiliencyPeriod = Resiliency Period (s)
+    QuarantineThreshold = Quarantine Threshold
+    QuarantineDuration = Quarantine Duration (s)
+    DrainOnShutdown = Drain On Shutdown
+    AutoBalancerMode = Auto Balancer Mode
+    AutoBalancerLevel = Auto Balancer Level
+    BlockCacheSize = CSV Block Cache (MB)
+    SharedVolumesRoot = Shared Volumes Root
+    AutoBalancerMode0 = Disabled
+    AutoBalancerMode1 = Balance on node join
+    AutoBalancerMode2 = Balance on node join and every 30 minutes
+    AutoBalancerLevel1 = Low
+    AutoBalancerLevel2 = Medium
+    AutoBalancerLevel3 = High
+    FunctionalLevel8 = Windows Server 2012 R2
+    FunctionalLevel9 = Windows Server 2016
+    FunctionalLevel10 = Windows Server 2019
+    FunctionalLevel11 = Windows Server 2022
+    FunctionalLevel12 = Windows Server 2025
+    NodeName = Name
+    State = State
+    DrainStatus = Drain Status
+    OSBuild = OS Build
+    Model = Model
+    NodeId = Node ID
+    StatusInformation = Status Information
+    NodeWeight = Node Weight
+    DynamicWeight = Dynamic Weight
+    FaultDomain = Fault Domain
+    OSVersion = Operating System
+    SerialNumber = Serial Number
+    HealthCheck = Health Check:
+    NodeStateBP = The following nodes are not in the Up state: {0}. Nodes that are down or paused reduce the failover capacity of the cluster.
+    NodeBuildBP = The following nodes run a different OS build than the rest of the cluster ({1}): {0}. Keep all nodes on the same cumulative update.
+'@
+
+}

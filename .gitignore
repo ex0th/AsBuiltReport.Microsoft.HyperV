@@ -1,0 +1,21 @@
+debug.log
+### PowerShell ###
+# Exclude packaged modules
+*.zip
+
+# Exclude .NET assemblies from source
+*.dll
+
+### Tests ###
+Tests/testResults.xml
+Tests/coverage.xml
+
+### Local development context ###
+CLAUDE.md
+.claude/
+
+### vscode ###
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+*.code-workspace
