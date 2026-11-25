@@ -282,4 +282,122 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     SettingsConsistencyBP = Die folgenden Livemigrationseinstellungen unterscheiden sich zwischen den Hosts: {0} (Hosts: {1}). Verwenden Sie auf allen Hosts dieselben Einstellungen, damit sich Migrationen in jede Richtung gleich verhalten.
 '@
 
+    # Get-AbrHvClusterRole
+    GetAbrHvClusterRole = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für Cluster ist auf {0} gesetzt.
+    Collecting = Informationen zu den Clusterrollen von {0} werden gesammelt.
+    Heading = Clusterrollen
+    HeadingFailover = Failovereinstellungen
+    ParagraphSummary = Die folgende Tabelle listet die Clusterrollen des Clusters {0} auf.
+    ParagraphFailover = Die folgende Tabelle zeigt, wie oft jede Rolle innerhalb des Zeitraums ein Failover ausführen darf und ob sie zum bevorzugten Besitzer zurückkehrt.
+    NoRoles = Der Cluster hat keine Clusterrollen.
+    TableRoles = Clusterrollen
+    TableFailover = Failovereinstellungen der Rollen
+    RoleName = Rolle
+    RoleType = Typ
+    OwnerNode = Besitzerknoten
+    State = Status
+    Priority = Priorität
+    PreferredOwners = Bevorzugte Besitzer
+    FailoverThreshold = Maximale Fehler
+    FailoverPeriod = Zeitraum (Stunden)
+    Failback = Failback
+    AntiAffinity = Antiaffinitätsklasse
+    TypeVirtualMachine = Virtueller Computer
+    TypeFileServer = Dateiserver
+    TypeScaleoutFileServer = Dateiserver mit horizontaler Skalierung
+    TypeInfrastructureFileServer = Infrastrukturdateiserver
+    TypeGenericApplication = Generische Anwendung
+    TypeGenericService = Generischer Dienst
+    TypeGenericScript = Generisches Skript
+    PriorityHigh = Hoch
+    PriorityMedium = Mittel
+    PriorityLow = Niedrig
+    PriorityNoAutoStart = Kein automatischer Start
+    ValueAnyNode = Beliebiger Knoten
+    ValueAutomatic = Automatisch
+    FailbackPrevent = Verhindern
+    FailbackImmediately = Zulassen, sofort
+    FailbackWindow = Zulassen, zwischen {0}:00 und {1}:00 Uhr
+    HealthCheck = Integritätsprüfung:
+    RoleStateBP = Die folgenden Rollen sind fehlerhaft oder nicht vollständig online: {0}. Prüfen Sie die Ressourcen dieser Rollen im Failovercluster-Manager und die Clusterereignisse.
+'@
+
+    # Get-AbrHvClusterSharedVolume
+    GetAbrHvClusterSharedVolume = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für Cluster ist auf {0} gesetzt.
+    Collecting = Informationen zu den freigegebenen Clustervolumes von {0} werden gesammelt.
+    Heading = Freigegebene Clustervolumes
+    HeadingNodeState = E/A-Modus je Knoten
+    ParagraphSummary = Die folgende Tabelle listet die freigegebenen Clustervolumes (CSV) des Clusters {0} auf.
+    ParagraphNodeState = Die folgende Tabelle zeigt, wie jeder Knoten auf die freigegebenen Clustervolumes zugreift. ReFS-Volumes verwenden immer umgeleitete E/A auf Dateisystemebene; das ist erwartet.
+    NoVolumes = Der Cluster hat keine freigegebenen Clustervolumes.
+    TableVolumes = Freigegebene Clustervolumes
+    TableNodeState = CSV-E/A-Modus
+    TableSettings = CSV-Einstellungen
+    VolumeName = Volume
+    Path = Pfad
+    OwnerNode = Besitzerknoten
+    State = Status
+    IoMode = E/A-Modus
+    Capacity = Kapazität
+    FreeSpace = Freier Speicher
+    FreePercent = Frei
+    FileSystem = Dateisystem
+    Node = Knoten
+    StateInfo = Zugriff
+    FileSystemReason = Grund der Dateisystemumleitung
+    BlockReason = Grund der Blockumleitung
+    BlockCacheSize = Größe des CSV-Blockcaches
+    IoModeDirect = Direkt
+    IoModeReFsRedirected = Dateisystem umgeleitet (ReFS)
+    IoModeRedirected = Umgeleitet auf {0}
+    IoModeUnknown = Unbekannt
+    ValueDisabled = Deaktiviert
+    ValueMB = {0} MB
+    HealthCheck = Integritätsprüfung:
+    CsvStateBP = Die folgenden freigegebenen Clustervolumes sind nicht online oder im Wartungsmodus: {0}. Virtuelle Computer auf diesen Volumes sind möglicherweise nicht verfügbar.
+    CsvRedirectedAccessBP = Die folgenden freigegebenen Clustervolumes verwenden auf mindestens einem Knoten umgeleitete E/A aus einem anderen Grund als ReFS: {0}. Umgeleitete E/A läuft über das Clusternetzwerk und verringert die Leistung. Prüfen Sie die Speicheranbindung dieser Knoten.
+    CsvFreeSpaceBP = Die folgenden freigegebenen Clustervolumes haben weniger als 20 % freien Speicher (kritisch unter 10 %): {0}. Halten Sie genug freien Speicher für das Wachstum virtueller Festplatten, Prüfpunkte und Speicherabbilder vor.
+'@
+
+    # Get-AbrHvClusterAwareUpdating
+    GetAbrHvClusterAwareUpdating = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für Cluster ist auf {0} gesetzt.
+    Collecting = Informationen zum clusterfähigen Aktualisieren von {0} werden gesammelt.
+    Heading = Clusterfähiges Aktualisieren
+    HeadingLastRun = Letzter Aktualisierungslauf
+    ParagraphSummary = Die folgende Tabelle zeigt die Konfiguration des clusterfähigen Aktualisierens (CAU) des Clusters {0}.
+    ModuleMissing = Das PowerShell-Modul für clusterfähiges Aktualisieren ist auf dem Clusterknoten nicht verfügbar, daher kann die Konfiguration nicht dokumentiert werden.
+    TableCau = Clusterfähiges Aktualisieren
+    TableLastRun = Letzter Aktualisierungslauf
+    SelfUpdatingRole = Rolle für Selbstaktualisierung
+    RoleName = Rollenname
+    RoleStatus = Rollenstatus
+    Schedule = Zeitplan
+    StartDate = Beginn des Zeitplans
+    MaxFailedNodes = Maximal fehlerhafte Knoten
+    MaxRetriesPerNode = Maximale Wiederholungen je Knoten
+    RequireAllNodesOnline = Alle Knoten müssen online sein
+    Plugin = Plug-In
+    FailbackMode = Failbackmodus
+    RebootTimeout = Neustarttimeout (Minuten)
+    PreUpdateScript = Skript vor der Aktualisierung
+    PostUpdateScript = Skript nach der Aktualisierung
+    FirewallRules = Firewallregeln aktivieren
+    LastRun = Letzter Lauf
+    LastRunResult = Ergebnis des letzten Laufs
+    Node = Knoten
+    NodeStatus = Status
+    UpdateCount = Updates
+    ScheduleWeekly = Jeden {0}
+    ScheduleMonthly = {0}, Woche {1} des Monats
+    ScheduleInterval = {0}, alle {1} Wochen
+    ValueNoRun = Kein Lauf aufgezeichnet
+    HealthCheck = Integritätsprüfung:
+    NoSelfUpdatingRoleBP = Der Cluster hat keine Rolle für die Selbstaktualisierung per clusterfähigem Aktualisieren. Stellen Sie sicher, dass die Knoten koordiniert aktualisiert werden, entweder mit der CAU-Rolle für Selbstaktualisierung oder mit Remoteaktualisierungsläufen.
+    SelfUpdatingOfflineBP = Die CAU-Rolle für die Selbstaktualisierung ist nicht online, daher starten geplante Aktualisierungsläufe nicht. Aktivieren Sie die Rolle, wenn sich der Cluster selbst aktualisieren soll.
+    LastRunBP = Der letzte Lauf des clusterfähigen Aktualisierens war nicht erfolgreich. Prüfen Sie im Bericht des Laufs, auf welchen Knoten er fehlgeschlagen ist.
+'@
+
 }

@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health checks for cluster networks and interfaces that are not up and for clusters with fewer than two networks for cluster communication
 - `Live Migration` section with the cluster settings (networks, parallel migrations, SMB bandwidth limit) and the Hyper-V live migration settings of every host, also for standalone hosts; new `InfoLevel.LiveMigration`
 - Health checks for clusters that exclude every network from live migration, hosts with live migration disabled and live migration settings that differ between hosts
+- `Cluster Roles` section with type, owner node, state, priority, preferred owners and failover settings of every clustered role
+- `Cluster Shared Volumes` section with path, owner, state, I/O mode per node, capacity and free space
+- `Cluster-Aware Updating` section with the self-updating role, its schedule and options and the last updating run
+- Health checks for failed or partially online roles, Cluster Shared Volumes that are not online, use redirected I/O (ReFS is expected and ignored) or run out of free space, a missing or offline CAU self-updating role and a failed last CAU run
 - Detection evidence for the Hyper-V role per host, physical disk resources, Cluster Shared Volumes, Scale-Out File Server roles and SMB shares that hold virtual hard disks
 - Readable values for the cluster functional level and the auto balancer mode and level
 - en-US and de-DE language files; fixed wording in the detection evidence is translated as well

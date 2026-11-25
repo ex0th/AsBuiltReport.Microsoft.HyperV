@@ -36,7 +36,13 @@
             "QuorumWitnessState": true,
             "DynamicQuorum": true,
             "NetworkState": true,
-            "NetworkRedundancy": true
+            "NetworkRedundancy": true,
+            "RoleState": true,
+            "CsvState": true,
+            "CsvRedirectedAccess": true,
+            "CsvFreeSpace": true,
+            "CauSelfUpdating": true,
+            "CauLastRun": true
         },
         "LiveMigration": {
             "MigrationNetwork": true,

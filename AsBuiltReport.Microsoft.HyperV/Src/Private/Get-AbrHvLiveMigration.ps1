@@ -126,7 +126,7 @@
                         $ClusterObjHash[$LocalizedData.ClusterSmbLimitFactor] = $(if ($null -eq $ClusterData.SMBBandwidthLimitFactor) {
                                 '--'
                             } else {
-                                '{0} %' -f ([double]$ClusterData.SMBBandwidthLimitFactor / 100)
+                                ConvertTo-HvPercent ([double]$ClusterData.SMBBandwidthLimitFactor / 100) -Decimals 2
                             })
                     }
                     $ClusterObj = [PSCustomObject]$ClusterObjHash

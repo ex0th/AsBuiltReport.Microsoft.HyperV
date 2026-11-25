@@ -744,6 +744,292 @@ function Resolve-HvSettingDeviation {
     }
 }
 
+function Resolve-HvClusterGroup {
+    <#
+    .SYNOPSIS
+        Selects the cluster roles and rates their state.
+    .DESCRIPTION
+        Pure function without remote calls. Returns the roles as Failover Cluster Manager shows them: core
+        groups (cluster core resources, available storage, storage pool, SDDC) are left out.
+
+        PriorityKey: High (3000), Medium (2000), Low (1000), NoAutoStart (0), or the raw value
+        StateSeverity: Ok (Online or Offline), Warning (partially online or pending), Critical (Failed)
+
+        A role that is offline is not rated, because virtual machines are often shut down on purpose.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [Object[]] $Group
+    )
+
+    $InfrastructureTypes = @('Cluster', 'AvailableStorage', 'ClusterStoragePool', 'CoreSddc', 'ClusterUpdate')
+    foreach ($Item in @($Group | Where-Object { $_ })) {
+        if ([string]$Item.IsCoreGroup -eq 'True' -or $InfrastructureTypes -contains [string]$Item.GroupType) {
+            continue
+        }
+        $PriorityKey = switch ([string]$Item.Priority) {
+            '3000' { 'High' }
+            '2000' { 'Medium' }
+            '1000' { 'Low' }
+            '0' { 'NoAutoStart' }
+            default { [string]$Item.Priority }
+        }
+        $State = [string]$Item.State
+        $StateSeverity = switch ($State) {
+            { $_ -in 'Online', 'Offline' } { 'Ok'; break }
+            'Failed' { 'Critical'; break }
+            default { 'Warning' }
+        }
+        [PSCustomObject]@{
+            Name = [string]$Item.Name
+            GroupType = [string]$Item.GroupType
+            OwnerNode = [string]$Item.OwnerNode
+            State = $State
+            StateSeverity = $StateSeverity
+            PriorityKey = $PriorityKey
+        }
+    }
+}
+
+function Resolve-HvCsvState {
+    <#
+    .SYNOPSIS
+        Rates the state, I/O mode and free space of Cluster Shared Volumes.
+    .DESCRIPTION
+        Pure function without remote calls.
+
+        StateSeverity: Ok (Online), Warning (maintenance mode or another state), Critical (Failed, Offline)
+        IoModeKey: Direct, ReFsRedirected, Redirected, Unknown
+        IoSeverity: Ok, Warning (redirected for a reason other than ReFS)
+        FreeSeverity: Ok, Warning (below WarningFreePercent), Critical (below CriticalFreePercent)
+
+        ReFS volumes always use file system redirected I/O on every node. That is the expected mode and is
+        not rated.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [Object[]] $Volume,
+
+        # One entry per volume and node: Name, Node, StateInfo, FileSystemRedirectedIOReason, BlockRedirectedIOReason
+        [AllowEmptyCollection()]
+        [Object[]] $NodeState = @(),
+
+        [Double] $WarningFreePercent = 20,
+
+        [Double] $CriticalFreePercent = 10
+    )
+
+    foreach ($Item in @($Volume | Where-Object { $_ })) {
+        $State = [string]$Item.State
+        $StateSeverity = if ($State -in 'Failed', 'Offline') {
+            'Critical'
+        } elseif ($State -ne 'Online' -or [string]$Item.MaintenanceMode -eq 'True') {
+            'Warning'
+        } else {
+            'Ok'
+        }
+
+        $States = @($NodeState | Where-Object { $_ -and [string]$_.Name -eq [string]$Item.Name })
+        $Redirected = @($States | Where-Object { [string]$_.StateInfo -ne 'Direct' })
+        $Unexpected = @($Redirected | Where-Object {
+                -not ([string]$_.StateInfo -eq 'FileSystemRedirected' -and [string]$_.FileSystemRedirectedIOReason -eq 'FileSystemReFs')
+            })
+        $IoModeKey = if ($States.Count -eq 0) {
+            'Unknown'
+        } elseif ($Redirected.Count -eq 0) {
+            'Direct'
+        } elseif ($Unexpected.Count -eq 0) {
+            'ReFsRedirected'
+        } else {
+            'Redirected'
+        }
+
+        $FreePercent = $null
+        if ($null -ne $Item.FreePercent -and [string]$Item.FreePercent -ne '') {
+            $FreePercent = [double]$Item.FreePercent
+        }
+        $FreeSeverity = if ($null -eq $FreePercent) {
+            'Ok'
+        } elseif ($FreePercent -lt $CriticalFreePercent) {
+            'Critical'
+        } elseif ($FreePercent -lt $WarningFreePercent) {
+            'Warning'
+        } else {
+            'Ok'
+        }
+
+        [PSCustomObject]@{
+            Name = [string]$Item.Name
+            State = $State
+            StateSeverity = $StateSeverity
+            IoModeKey = $IoModeKey
+            IoSeverity = $(if ($IoModeKey -eq 'Redirected') { 'Warning' } else { 'Ok' })
+            RedirectedNodes = [String[]]@($Unexpected | ForEach-Object { [string]$_.Node } | Sort-Object -Unique)
+            FreePercent = $FreePercent
+            FreeSeverity = $FreeSeverity
+        }
+    }
+}
+
+function Resolve-HvCauState {
+    <#
+    .SYNOPSIS
+        Evaluates the Cluster-Aware Updating configuration.
+    .DESCRIPTION
+        Pure function without remote calls. RoleParameter is the list of name/value pairs returned by
+        Get-CauClusterRole (or a hashtable); LastRunResult is the result of the most recent updating run.
+
+        Findings: NoSelfUpdatingRole, SelfUpdatingRoleOffline, LastRunNotSucceeded
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [AllowNull()]
+        [Object] $RoleParameter,
+
+        [AllowNull()]
+        [AllowEmptyString()]
+        [String] $LastRunResult
+    )
+
+    $Settings = [ordered]@{}
+    if ($RoleParameter -is [System.Collections.IDictionary]) {
+        foreach ($Key in $RoleParameter.Keys) {
+            $Settings[[string]$Key] = $RoleParameter[$Key]
+        }
+    } else {
+        foreach ($Item in @($RoleParameter | Where-Object { $_ })) {
+            if ($Item.PSObject.Properties['Name']) {
+                $Settings[[string]$Item.Name] = $Item.Value
+            }
+        }
+    }
+
+    $HasRole = ($Settings.Count -gt 0 -and -not [string]::IsNullOrWhiteSpace([string]$Settings['ResourceGroupName']))
+    $RoleOnline = ($HasRole -and [string]$Settings['Status'] -eq 'Online')
+
+    $Findings = New-Object -TypeName System.Collections.Generic.List[String]
+    if (-not $HasRole) {
+        $Findings.Add('NoSelfUpdatingRole')
+    } elseif (-not $RoleOnline) {
+        $Findings.Add('SelfUpdatingRoleOffline')
+    }
+    if (-not [string]::IsNullOrWhiteSpace($LastRunResult) -and $LastRunResult -ne 'Succeeded') {
+        $Findings.Add('LastRunNotSucceeded')
+    }
+
+    [PSCustomObject]@{
+        HasSelfUpdatingRole = $HasRole
+        SelfUpdatingRoleOnline = $RoleOnline
+        Settings = $Settings
+        Findings = [String[]]$Findings.ToArray()
+    }
+}
+
+function Get-HvReportCulture {
+    <#
+    .SYNOPSIS
+        Returns the culture of the report language.
+    .DESCRIPTION
+        Numbers and dates follow the report language (Report.Language), not the culture of the machine that
+        generates the report. Falls back to the current culture.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([System.Globalization.CultureInfo])]
+    param ()
+
+    $ReportConfig = Get-Variable -Name 'Report' -Scope Script -ValueOnly -ErrorAction SilentlyContinue
+    if ($ReportConfig -and $ReportConfig.Language) {
+        try {
+            return [System.Globalization.CultureInfo]::GetCultureInfo([string]$ReportConfig.Language)
+        } catch {
+            Write-Verbose "Unknown report language '$($ReportConfig.Language)', using the current culture."
+        }
+    }
+    Get-Culture
+}
+
+function ConvertTo-HvSize {
+    <#
+    .SYNOPSIS
+        Formats a size in bytes as GB or TB for a report table cell.
+    .DESCRIPTION
+        Sizes from 1 TB are shown in TB with two decimals, smaller sizes in GB with up to one decimal.
+        Uses binary units (1 GB = 1024^3 bytes), like the Windows storage tools. Empty values become '--'.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(Position = 0)]
+        [AllowNull()]
+        [Object] $Bytes,
+
+        [System.Globalization.CultureInfo] $Culture = (Get-HvReportCulture)
+    )
+
+    if ($null -eq $Bytes -or [string]$Bytes -eq '') {
+        return '--'
+    }
+    $Value = [double]$Bytes
+    if ($Value -ge 1TB) {
+        return [string]::Format($Culture, '{0} TB', [math]::Round($Value / 1TB, 2))
+    }
+    [string]::Format($Culture, '{0} GB', [math]::Round($Value / 1GB, 1))
+}
+
+function ConvertTo-HvPercent {
+    <#
+    .SYNOPSIS
+        Formats a percentage for a report table cell, for example '97.4 %'. Empty values become '--'.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(Position = 0)]
+        [AllowNull()]
+        [Object] $Value,
+
+        [Int] $Decimals = 1,
+
+        [System.Globalization.CultureInfo] $Culture = (Get-HvReportCulture)
+    )
+
+    if ($null -eq $Value -or [string]$Value -eq '') {
+        return '--'
+    }
+    [string]::Format($Culture, '{0} %', [math]::Round([double]$Value, $Decimals))
+}
+
 function ConvertTo-HvDisplayValue {
     <#
     .SYNOPSIS

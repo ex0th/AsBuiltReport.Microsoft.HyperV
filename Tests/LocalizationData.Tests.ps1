@@ -118,6 +118,21 @@ Describe 'Localization data' {
         }
     }
 
+    It 'provides display strings for every cluster role priority and CSV I/O mode' {
+        $Section = $script:Template['GetAbrHvClusterRole']
+        foreach ($Key in 'High', 'Medium', 'Low', 'NoAutoStart') {
+            $Section.ContainsKey("Priority$Key") | Should -BeTrue -Because "Priority$Key is rendered for that priority"
+        }
+        # Other role types show the raw group type.
+        foreach ($Type in 'VirtualMachine', 'FileServer', 'ScaleoutFileServer') {
+            $Section.ContainsKey("Type$Type") | Should -BeTrue -Because "Type$Type is rendered for that role type"
+        }
+        $Section = $script:Template['GetAbrHvClusterSharedVolume']
+        foreach ($Mode in 'Direct', 'ReFsRedirected', 'Redirected', 'Unknown') {
+            $Section.ContainsKey("IoMode$Mode") | Should -BeTrue -Because "IoMode$Mode is rendered for that I/O mode"
+        }
+    }
+
     # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
     # -AllowNullOrEmptyForEach switch.
     if ($script:LanguageFolders.Count -gt 0) {

@@ -281,4 +281,122 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     SettingsConsistencyBP = The following live migration settings differ between hosts: {0} (hosts: {1}). Use the same settings on all hosts so that migrations behave the same in every direction.
 '@
 
+    # Get-AbrHvClusterRole
+    GetAbrHvClusterRole = ConvertFrom-StringData @'
+    InfoLevel = Cluster InfoLevel set at {0}.
+    Collecting = Collecting cluster role information for {0}.
+    Heading = Cluster Roles
+    HeadingFailover = Failover Settings
+    ParagraphSummary = The following table lists the clustered roles of cluster {0}.
+    ParagraphFailover = The following table shows how often each role may fail over within the period and whether it moves back to its preferred owner.
+    NoRoles = The cluster has no clustered roles.
+    TableRoles = Cluster Roles
+    TableFailover = Role Failover Settings
+    RoleName = Role
+    RoleType = Type
+    OwnerNode = Owner Node
+    State = State
+    Priority = Priority
+    PreferredOwners = Preferred Owners
+    FailoverThreshold = Maximum Failures
+    FailoverPeriod = Period (hours)
+    Failback = Failback
+    AntiAffinity = Anti-Affinity Class
+    TypeVirtualMachine = Virtual Machine
+    TypeFileServer = File Server
+    TypeScaleoutFileServer = Scale-Out File Server
+    TypeInfrastructureFileServer = Infrastructure File Server
+    TypeGenericApplication = Generic Application
+    TypeGenericService = Generic Service
+    TypeGenericScript = Generic Script
+    PriorityHigh = High
+    PriorityMedium = Medium
+    PriorityLow = Low
+    PriorityNoAutoStart = No Auto Start
+    ValueAnyNode = Any node
+    ValueAutomatic = Automatic
+    FailbackPrevent = Prevent
+    FailbackImmediately = Allow, immediately
+    FailbackWindow = Allow, between {0}:00 and {1}:00
+    HealthCheck = Health Check:
+    RoleStateBP = The following roles failed or are not completely online: {0}. Check the resources of these roles in Failover Cluster Manager and the cluster events.
+'@
+
+    # Get-AbrHvClusterSharedVolume
+    GetAbrHvClusterSharedVolume = ConvertFrom-StringData @'
+    InfoLevel = Cluster InfoLevel set at {0}.
+    Collecting = Collecting Cluster Shared Volume information for {0}.
+    Heading = Cluster Shared Volumes
+    HeadingNodeState = I/O Mode per Node
+    ParagraphSummary = The following table lists the Cluster Shared Volumes (CSV) of cluster {0}.
+    ParagraphNodeState = The following table shows how every node accesses each Cluster Shared Volume. ReFS volumes always use file system redirected I/O, which is expected.
+    NoVolumes = The cluster has no Cluster Shared Volumes.
+    TableVolumes = Cluster Shared Volumes
+    TableNodeState = CSV I/O Mode
+    TableSettings = CSV Settings
+    VolumeName = Volume
+    Path = Path
+    OwnerNode = Owner Node
+    State = State
+    IoMode = I/O Mode
+    Capacity = Capacity
+    FreeSpace = Free Space
+    FreePercent = Free
+    FileSystem = File System
+    Node = Node
+    StateInfo = Access
+    FileSystemReason = File System Redirection Reason
+    BlockReason = Block Redirection Reason
+    BlockCacheSize = CSV Block Cache Size
+    IoModeDirect = Direct
+    IoModeReFsRedirected = File system redirected (ReFS)
+    IoModeRedirected = Redirected on {0}
+    IoModeUnknown = Unknown
+    ValueDisabled = Disabled
+    ValueMB = {0} MB
+    HealthCheck = Health Check:
+    CsvStateBP = The following Cluster Shared Volumes are not online or in maintenance mode: {0}. Virtual machines on these volumes may not be available.
+    CsvRedirectedAccessBP = The following Cluster Shared Volumes use redirected I/O on at least one node for a reason other than ReFS: {0}. Redirected I/O sends the traffic over the cluster network and reduces performance. Check the storage connectivity of these nodes.
+    CsvFreeSpaceBP = The following Cluster Shared Volumes have less than 20 % free space (critical below 10 %): {0}. Keep enough free space for virtual hard disk growth, checkpoints and memory dumps.
+'@
+
+    # Get-AbrHvClusterAwareUpdating
+    GetAbrHvClusterAwareUpdating = ConvertFrom-StringData @'
+    InfoLevel = Cluster InfoLevel set at {0}.
+    Collecting = Collecting Cluster-Aware Updating information for {0}.
+    Heading = Cluster-Aware Updating
+    HeadingLastRun = Last Updating Run
+    ParagraphSummary = The following table shows the Cluster-Aware Updating (CAU) configuration of cluster {0}.
+    ModuleMissing = The Cluster-Aware Updating PowerShell module is not available on the cluster node, so the configuration cannot be documented.
+    TableCau = Cluster-Aware Updating
+    TableLastRun = Last Updating Run
+    SelfUpdatingRole = Self-Updating Role
+    RoleName = Role Name
+    RoleStatus = Role Status
+    Schedule = Schedule
+    StartDate = Schedule Start
+    MaxFailedNodes = Maximum Failed Nodes
+    MaxRetriesPerNode = Maximum Retries per Node
+    RequireAllNodesOnline = Require All Nodes Online
+    Plugin = Plug-in
+    FailbackMode = Failback Mode
+    RebootTimeout = Reboot Timeout (minutes)
+    PreUpdateScript = Pre-Update Script
+    PostUpdateScript = Post-Update Script
+    FirewallRules = Enable Firewall Rules
+    LastRun = Last Run
+    LastRunResult = Last Run Result
+    Node = Node
+    NodeStatus = Status
+    UpdateCount = Updates
+    ScheduleWeekly = Every {0}
+    ScheduleMonthly = {0}, week {1} of the month
+    ScheduleInterval = {0}, every {1} weeks
+    ValueNoRun = No run recorded
+    HealthCheck = Health Check:
+    NoSelfUpdatingRoleBP = The cluster has no Cluster-Aware Updating self-updating role. Make sure the nodes are updated in a coordinated way, either with the CAU self-updating role or with remote updating runs.
+    SelfUpdatingOfflineBP = The Cluster-Aware Updating self-updating role is not online, so scheduled updating runs do not start. Enable the role if the cluster should update itself.
+    LastRunBP = The last Cluster-Aware Updating run did not succeed. Check the updating run report for the nodes that failed.
+'@
+
 }

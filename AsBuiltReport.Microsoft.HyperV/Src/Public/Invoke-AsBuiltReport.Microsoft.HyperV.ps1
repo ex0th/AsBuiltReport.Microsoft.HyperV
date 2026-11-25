@@ -153,14 +153,20 @@
                     Get-AbrHvClusterQuorum
                     # Cluster networks, their use for live migration and the node interfaces
                     Get-AbrHvClusterNetwork
+                    # Clustered roles with owner, priority and failover settings
+                    Get-AbrHvClusterRole
+                    # Cluster Shared Volumes with I/O mode and free space
+                    Get-AbrHvClusterSharedVolume
+                    # Cluster-Aware Updating role and last updating run
+                    Get-AbrHvClusterAwareUpdating
                 }
 
                 # Live migration settings of the cluster and of every host (also for standalone hosts)
                 Get-AbrHvLiveMigration
 
                 # Planned sections (see README roadmap):
-                # Cluster: Cluster-Aware Updating
-                # Host: Hardware, OS build, Hyper-V settings, NICs, SET switches, RDMA/DCB
+                # Host: Hyper-V specific host settings
+                # Networking: SET switches, host vNICs, RDMA/DCB
                 # Storage by topology: S2D pool/virtual disks/cache/fault domains, iSCSI/FC/MPIO, SMB shares
                 # Consistency: node-to-node comparison as health checks
                 # Virtual machines (optional)
