@@ -242,6 +242,7 @@ The table below outlines the default and maximum InfoLevel settings for each sec
 | StorageS2D    |        1        |        2        |
 | Storage3Tier  |        1        |        2        |
 | Consistency   |        1        |        2        |
+| VirtualMachines |      0        |        2        |
 
 ### Healthcheck
 The **Healthcheck** schema is used to toggle health checks on or off.
@@ -289,6 +290,10 @@ The **Healthcheck** schema is used to toggle health checks on or off.
 | Consistency.Network             | true / false | true    | Highlights nodes whose virtual switches, host vNICs, NIC drivers, jumbo frames, RDMA or DCB differ | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Consistency.Storage             | true / false | true    | Highlights nodes whose MPIO settings, disk firmware or iSCSI targets differ  | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Consistency.Features            | true / false | true    | Highlights nodes on which roles or features of the other nodes are missing   | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| VirtualMachines.Checkpoints     | true / false | true    | Highlights virtual machines with checkpoints                                 | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| VirtualMachines.NotClustered    | true / false | true    | Highlights virtual machines on cluster nodes that are not clustered roles    | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| VirtualMachines.ConfigurationVersion | true / false | true | Highlights virtual machines with a configuration version below the host default | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| VirtualMachines.NetworkDisconnected | true / false | true | Highlights virtual machines with network adapters that are not connected to a switch | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/examples.svg" alt="" width="24" height="24" align="top"> Examples
 <!-- ********** Add some examples. Use other AsBuiltReport modules as a guide. ********** -->
@@ -315,5 +320,4 @@ The report follows the PScribo conventions used across AsBuiltReport modules, so
 | Area | Planned content |
 |---|---|
 | Storage: SMB | SMB shares used by Hyper-V, SMB Multichannel and SMB Direct |
-| Virtual machines | Optional VM inventory (InfoLevel 0 by default) |
 

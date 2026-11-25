@@ -723,4 +723,60 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ConsistencyBP = The configuration differs between the nodes in the following categories: {0}. Nodes of a cluster should use the same updates, drivers, firmware and settings, so that roles behave the same on every node after a failover or live migration.
 '@
 
+    # Get-AbrHvVirtualMachine
+    GetAbrHvVirtualMachine = ConvertFrom-StringData @'
+    InfoLevel = VirtualMachines InfoLevel set at {0}.
+    Collecting = Collecting virtual machine information for {0}.
+    HostFailed = Unable to collect the virtual machines of '{0}': {1}
+    Heading = Virtual Machines
+    ParagraphSummary = The following table lists the virtual machines of {0} ({1} virtual machines, {2} running).
+    NoVMs = No virtual machines are registered on the hosts.
+    TableVMs = Virtual Machines
+    TableVM = Virtual Machine
+    TableVmDisks = Virtual Hard Disks
+    TableVmAdapters = Network Adapters
+    VmName = Virtual Machine
+    HostName = Host
+    State = State
+    Version = Generation / Version
+    Processors = vCPU
+    Memory = Memory
+    Disks = Virtual Hard Disks
+    Network = Network
+    Checkpoints = Checkpoints
+    Clustered = Clustered
+    Generation = Generation
+    ConfigurationVersion = Configuration Version
+    Path = Path
+    StartupMemory = Startup Memory
+    DynamicMemory = Dynamic Memory
+    AssignedMemory = Assigned Memory
+    CheckpointType = Checkpoint Type
+    StartAction = Automatic Start Action
+    StopAction = Automatic Stop Action
+    SecureBoot = Secure Boot
+    Tpm = Virtual TPM
+    Replication = Replication
+    Controller = Controller
+    VhdType = Format
+    Size = Maximum Size
+    FileSize = File Size
+    AdapterName = Adapter
+    SwitchName = Switch
+    Vlan = VLAN
+    MacAddress = MAC Address
+    ValueUntagged = Untagged
+    ValueNotConnected = Not connected
+    ValueNone = None
+    ValueDynamicMemory = {0} (dynamic)
+    ValueDisks = {0} ({1})
+    ValueMemoryRange = {0} to {1}
+    ValueDynamicMac = Dynamic
+    HealthCheck = Health Check:
+    CheckpointsBP = The following virtual machines have checkpoints: {0}. Checkpoints are not a backup; merge checkpoints that are no longer needed, because they grow and slow down the disk access.
+    NotClusteredBP = The following virtual machines run on a cluster node but are not clustered roles: {0}. Make them highly available or document why they stay on one node.
+    ConfigurationVersionBP = The configuration version of the following virtual machines is lower than the default version of their host: {0}. Update the configuration version after all nodes run the new operating system, to use the current Hyper-V features.
+    NetworkDisconnectedBP = The following virtual machines have network adapters that are not connected to a virtual switch: {0}.
+'@
+
 }

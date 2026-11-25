@@ -27,7 +27,8 @@
         "Networking": 1,
         "StorageS2D": 1,
         "Storage3Tier": 1,
-        "Consistency": 1
+        "Consistency": 1,
+        "VirtualMachines": 0
     },
     "HealthCheck": {
         "Environment": {
@@ -86,6 +87,12 @@
             "Network": true,
             "Storage": true,
             "Features": true
+        },
+        "VirtualMachines": {
+            "Checkpoints": true,
+            "NotClustered": true,
+            "ConfigurationVersion": true,
+            "NetworkDisconnected": true
         }
     }
 }

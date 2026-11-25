@@ -1184,6 +1184,54 @@ function ConvertTo-HvResourceSeverity {
     }
 }
 
+function Resolve-HvVmFinding {
+    <#
+    .SYNOPSIS
+        Evaluates the configuration of one virtual machine.
+    .DESCRIPTION
+        Pure function without remote calls. Input properties of VM: CheckpointCount, IsClustered, Version,
+        Adapters (SwitchName).
+
+        Findings:
+        Checkpoints           the VM has checkpoints
+        NotClustered          the VM runs on a cluster node but is not a clustered role
+        ConfigurationVersion  the configuration version is lower than the default version of the host
+        NetworkDisconnected   a network adapter is not connected to a virtual switch
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(Mandatory)]
+        [Object] $VM,
+
+        [Switch] $IsCluster,
+
+        [AllowNull()]
+        [AllowEmptyString()]
+        [String] $HostDefaultVersion
+    )
+
+    if ([int]$VM.CheckpointCount -gt 0) {
+        'Checkpoints'
+    }
+    if ($IsCluster -and [string]$VM.IsClustered -ne 'True') {
+        'NotClustered'
+    }
+    $VmVersion = $null
+    $DefaultVersion = $null
+    if ([version]::TryParse([string]$VM.Version, [ref]$VmVersion) -and
+        [version]::TryParse($HostDefaultVersion, [ref]$DefaultVersion) -and $VmVersion -lt $DefaultVersion) {
+        'ConfigurationVersion'
+    }
+    if (@($VM.Adapters | Where-Object { $_ -and [string]::IsNullOrEmpty([string]$_.SwitchName) }).Count -gt 0) {
+        'NetworkDisconnected'
+    }
+}
+
 function Resolve-HvClusterGroup {
     <#
     .SYNOPSIS

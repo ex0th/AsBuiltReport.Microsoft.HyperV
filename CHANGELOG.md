@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Shared Block Storage` section for 3-tier environments with iSCSI sessions and portals, Fibre Channel ports, Multipath I/O settings, shared disks with their number of paths and the cluster disks; new `InfoLevel.Storage3Tier`
 - Health checks for shared disks with a single path or without Multipath I/O, iSCSI sessions that are not connected or not persistent and cluster disks that are not online
 - `Node Consistency` section that compares operating system, hotfixes, hardware, Hyper-V settings, networking, storage and installed features between the nodes, with the deviations and (InfoLevel 2) the full comparison per category; new `InfoLevel.Consistency` and one health check per category
+- Optional `Virtual Machines` inventory with host, state, generation and version, processors, memory, virtual hard disks, network and checkpoints, and (InfoLevel 2) the details, disks and network adapters of every virtual machine; new `InfoLevel.VirtualMachines` (0 by default)
+- Health checks for virtual machines with checkpoints, virtual machines on cluster nodes that are not clustered, configuration versions below the host default and network adapters without a virtual switch
 - Health checks for failed or partially online roles, Cluster Shared Volumes that are not online, use redirected I/O (ReFS is expected and ignored) or run out of free space, a missing or offline CAU self-updating role and a failed last CAU run
 - Detection evidence for the Hyper-V role per host, physical disk resources, Cluster Shared Volumes, Scale-Out File Server roles and SMB shares that hold virtual hard disks
 - Readable values for the cluster functional level and the auto balancer mode and level

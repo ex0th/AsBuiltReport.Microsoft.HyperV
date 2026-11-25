@@ -724,4 +724,60 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ConsistencyBP = Die Konfiguration unterscheidet sich zwischen den Knoten in den folgenden Kategorien: {0}. Die Knoten eines Clusters sollten dieselben Updates, Treiber, Firmware und Einstellungen verwenden, damit sich Rollen nach einem Failover oder einer Livemigration auf jedem Knoten gleich verhalten.
 '@
 
+    # Get-AbrHvVirtualMachine
+    GetAbrHvVirtualMachine = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für VirtualMachines ist auf {0} gesetzt.
+    Collecting = Informationen zu den virtuellen Computern von {0} werden gesammelt.
+    HostFailed = Die virtuellen Computer von '{0}' konnten nicht gesammelt werden: {1}
+    Heading = Virtuelle Computer
+    ParagraphSummary = Die folgende Tabelle listet die virtuellen Computer von {0} auf ({1} virtuelle Computer, {2} davon in Ausführung).
+    NoVMs = Auf den Hosts sind keine virtuellen Computer registriert.
+    TableVMs = Virtuelle Computer
+    TableVM = Virtueller Computer
+    TableVmDisks = Virtuelle Festplatten
+    TableVmAdapters = Netzwerkadapter
+    VmName = Virtueller Computer
+    HostName = Host
+    State = Status
+    Version = Generation / Version
+    Processors = vCPU
+    Memory = Arbeitsspeicher
+    Disks = Virtuelle Festplatten
+    Network = Netzwerk
+    Checkpoints = Prüfpunkte
+    Clustered = Geclustert
+    Generation = Generation
+    ConfigurationVersion = Konfigurationsversion
+    Path = Pfad
+    StartupMemory = Arbeitsspeicher beim Start
+    DynamicMemory = Dynamischer Arbeitsspeicher
+    AssignedMemory = Zugewiesener Arbeitsspeicher
+    CheckpointType = Prüfpunkttyp
+    StartAction = Automatische Startaktion
+    StopAction = Automatische Stoppaktion
+    SecureBoot = Sicherer Start
+    Tpm = Virtuelles TPM
+    Replication = Replikation
+    Controller = Controller
+    VhdType = Format
+    Size = Maximale Größe
+    FileSize = Dateigröße
+    AdapterName = Adapter
+    SwitchName = Switch
+    Vlan = VLAN
+    MacAddress = MAC-Adresse
+    ValueUntagged = Ohne Tag
+    ValueNotConnected = Nicht verbunden
+    ValueNone = Keine
+    ValueDynamicMemory = {0} (dynamisch)
+    ValueDisks = {0} ({1})
+    ValueMemoryRange = {0} bis {1}
+    ValueDynamicMac = Dynamisch
+    HealthCheck = Integritätsprüfung:
+    CheckpointsBP = Die folgenden virtuellen Computer haben Prüfpunkte: {0}. Prüfpunkte ersetzen keine Sicherung; führen Sie nicht mehr benötigte Prüfpunkte zusammen, da sie wachsen und den Datenträgerzugriff verlangsamen.
+    NotClusteredBP = Die folgenden virtuellen Computer laufen auf einem Clusterknoten, sind aber keine Clusterrollen: {0}. Machen Sie sie hochverfügbar oder dokumentieren Sie, warum sie auf einem Knoten bleiben.
+    ConfigurationVersionBP = Die Konfigurationsversion der folgenden virtuellen Computer ist niedriger als die Standardversion ihres Hosts: {0}. Aktualisieren Sie die Konfigurationsversion, sobald alle Knoten das neue Betriebssystem verwenden, um die aktuellen Hyper-V-Funktionen zu nutzen.
+    NetworkDisconnectedBP = Die folgenden virtuellen Computer haben Netzwerkadapter, die mit keinem virtuellen Switch verbunden sind: {0}.
+'@
+
 }

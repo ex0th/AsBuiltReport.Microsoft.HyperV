@@ -177,10 +177,11 @@
                 # Node-to-node comparison (clusters with two or more reachable nodes)
                 Get-AbrHvConsistency
 
+                # Optional virtual machine inventory (InfoLevel 0 by default)
+                Get-AbrHvVirtualMachine
+
                 # Planned sections (see README roadmap):
-                # Storage by topology: S2D pool/virtual disks/cache/fault domains, iSCSI/FC/MPIO, SMB shares
-                # Consistency: node-to-node comparison as health checks
-                # Virtual machines (optional)
+                # Storage: SMB shares, SMB Multichannel, SMB Direct
             }
             #endregion Report Sections
         } catch {
