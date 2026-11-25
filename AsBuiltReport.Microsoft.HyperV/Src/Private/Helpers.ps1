@@ -891,6 +891,54 @@ function Resolve-HvHostSecurity {
     }
 }
 
+function Test-HvIpInSubnet {
+    <#
+    .SYNOPSIS
+        Tests whether an IPv4 address is part of a subnet in CIDR notation (for example 192.0.2.0/24).
+    .DESCRIPTION
+        Pure function. The address may carry a prefix length ('192.0.2.10/24'); it is ignored.
+        Returns $false for IPv6 or invalid values.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([Bool])]
+    param (
+        [AllowNull()]
+        [AllowEmptyString()]
+        [String] $IPAddress,
+
+        [AllowNull()]
+        [AllowEmptyString()]
+        [String] $Subnet
+    )
+
+    $Address = $null
+    $Network = $null
+    $Parts = ([string]$Subnet).Split('/')
+    $Prefix = 0
+    if ($Parts.Count -ne 2 -or -not [int]::TryParse($Parts[1], [ref]$Prefix) -or $Prefix -lt 0 -or $Prefix -gt 32) {
+        return $false
+    }
+    if (-not [System.Net.IPAddress]::TryParse(([string]$IPAddress).Split('/')[0], [ref]$Address) -or
+        -not [System.Net.IPAddress]::TryParse($Parts[0], [ref]$Network) -or
+        $Address.AddressFamily -ne 'InterNetwork' -or $Network.AddressFamily -ne 'InterNetwork') {
+        return $false
+    }
+    $AddressBytes = $Address.GetAddressBytes()
+    $NetworkBytes = $Network.GetAddressBytes()
+    for ($Index = 0; $Index -lt 4; $Index++) {
+        $Bits = [math]::Min([math]::Max($Prefix - (8 * $Index), 0), 8)
+        $Mask = [byte]((0xFF -shl (8 - $Bits)) -band 0xFF)
+        if (($AddressBytes[$Index] -band $Mask) -ne ($NetworkBytes[$Index] -band $Mask)) {
+            return $false
+        }
+    }
+    $true
+}
+
 function Resolve-HvNetworkFinding {
     <#
     .SYNOPSIS
@@ -898,17 +946,28 @@ function Resolve-HvNetworkFinding {
     .DESCRIPTION
         Pure function without remote calls. Input properties of NetworkData:
         Switches (Name, EmbeddedTeaming, Members, LoadBalancingAlgorithm),
-        HostVnics (Name, SwitchName, RdmaEnabled, MappedAdapter),
-        Adapters (Name, Status, RdmaCapable, RdmaEnabled, RdmaType, DcbEnabled),
-        Qos (Available, PfcPriorities, DcbxWilling).
+        HostVnics (Name, SwitchName, RdmaEnabled, MappedAdapter, IPAddresses),
+        Adapters (Name, Status, SwitchName, RdmaCapable, RdmaEnabled, RdmaType, DcbEnabled, IPAddresses),
+        Qos (Available, PfcPriorities, TrafficClasses (Name, Priority, Algorithm), Policies (Name, Priority,
+        Template, NetDirectPort), DcbxWilling).
 
-        RdmaType uses the values of *NetworkDirectTechnology: 1 iWARP, 2 InfiniBand, 3 RoCE, 4 RoCEv2.
+        RdmaEnabled is empty for adapters without RDMA support. RdmaType uses the values of
+        *NetworkDirectTechnology: 1 iWARP, 2 InfiniBand, 3 RoCE, 4 RoCEv2.
+
+        StorageSubnet lists the subnets of the cluster networks that carry cluster and storage traffic
+        (role Cluster only or Cluster and client). Only adapters with an address in these subnets are rated
+        for RDMA, so management and VM switches without RDMA are not reported. Without subnets, every
+        adapter with an address counts.
 
         Returns one object per finding with Check and Object:
         SetLoadBalancing  SET switch that does not use the Hyper-V port load balancing algorithm
-        RdmaDisabled      S2D host with an RDMA capable adapter that is up but has RDMA disabled
+        RdmaDisabled      S2D host: RDMA capable adapter or host vNIC on a storage network with RDMA disabled,
+                          or SET member below an RDMA host vNIC with RDMA disabled
+        NoStorageRdma     S2D host without any RDMA enabled adapter on a storage network
         RocePfc           RoCE adapter with RDMA enabled but without PFC or with DCB disabled on the adapter
         DcbxWilling       PFC configured and the host accepts DCBX settings from the switch
+        DcbTrafficClass   PFC and a QoS policy for SMB or cluster traffic exist, but no ETS traffic class
+                          covers its priority (Object: SMB or Cluster)
         VnicTeamMapping   RDMA host vNIC on a SET switch with two or more members without a team mapping
     .NOTES
         Version:        0.1.0
@@ -922,10 +981,33 @@ function Resolve-HvNetworkFinding {
         [Object] $NetworkData,
 
         # Storage Spaces Direct uses RDMA for the storage traffic between the nodes.
-        [Switch] $IsS2D
+        [Switch] $IsS2D,
+
+        [AllowEmptyCollection()]
+        [String[]] $StorageSubnet = @()
     )
 
+    $Subnets = @($StorageSubnet | Where-Object { $_ })
+    $OnStorageNetwork = {
+        param ($Item)
+        $Addresses = @($Item.IPAddresses | Where-Object { $_ })
+        if ($Subnets.Count -eq 0) {
+            return ($Addresses.Count -gt 0)
+        }
+        foreach ($Address in $Addresses) {
+            foreach ($Subnet in $Subnets) {
+                if (Test-HvIpInSubnet -IPAddress $Address -Subnet $Subnet) {
+                    return $true
+                }
+            }
+        }
+        $false
+    }
+
     $Switches = @($NetworkData.Switches | Where-Object { $_ })
+    $Adapters = @($NetworkData.Adapters | Where-Object { $_ })
+    $Vnics = @($NetworkData.HostVnics | Where-Object { $_ })
+
     foreach ($SwitchItem in $Switches) {
         if ([string]$SwitchItem.EmbeddedTeaming -eq 'True' -and
             -not [string]::IsNullOrEmpty([string]$SwitchItem.LoadBalancingAlgorithm) -and
@@ -934,13 +1016,44 @@ function Resolve-HvNetworkFinding {
         }
     }
 
-    $PfcPriorities = @($NetworkData.Qos.PfcPriorities | Where-Object { $null -ne $_ -and [string]$_ -ne '' })
-    foreach ($Adapter in @($NetworkData.Adapters | Where-Object { $_ })) {
-        $RdmaEnabled = ([string]$Adapter.RdmaEnabled -eq 'True')
-        if ($IsS2D -and [string]$Adapter.RdmaCapable -eq 'True' -and -not $RdmaEnabled -and [string]$Adapter.Status -eq 'Up') {
-            [PSCustomObject]@{ Check = 'RdmaDisabled'; Object = [string]$Adapter.Name }
+    if ($IsS2D) {
+        $StorageRdma = 0
+        $Reported = New-Object -TypeName System.Collections.Generic.List[String]
+        # Adapters and host vNICs that carry a storage network.
+        foreach ($Item in @($Adapters | Where-Object { [string]$_.Status -eq 'Up' }) + $Vnics) {
+            if (-not (& $OnStorageNetwork $Item)) {
+                continue
+            }
+            if ([string]$Item.RdmaEnabled -eq 'True') {
+                $StorageRdma++
+            } elseif ([string]$Item.RdmaEnabled -eq 'False') {
+                $Reported.Add([string]$Item.Name)
+                [PSCustomObject]@{ Check = 'RdmaDisabled'; Object = [string]$Item.Name }
+            }
         }
-        if ($RdmaEnabled -and [string]$Adapter.RdmaType -in '3', '4' -and
+        # Physical members of a SET switch that carries RDMA host vNICs need RDMA as well.
+        foreach ($SwitchItem in $Switches) {
+            $RdmaVnics = @($Vnics | Where-Object { [string]$_.SwitchName -eq [string]$SwitchItem.Name -and [string]$_.RdmaEnabled -eq 'True' })
+            if ($RdmaVnics.Count -eq 0) {
+                continue
+            }
+            foreach ($Member in @($SwitchItem.Members | Where-Object { $_ })) {
+                $Adapter = $Adapters | Where-Object { [string]$_.Name -eq [string]$Member } | Select-Object -First 1
+                if ($Adapter -and [string]$Adapter.Status -eq 'Up' -and [string]$Adapter.RdmaEnabled -eq 'False' -and
+                    -not $Reported.Contains([string]$Adapter.Name)) {
+                    $Reported.Add([string]$Adapter.Name)
+                    [PSCustomObject]@{ Check = 'RdmaDisabled'; Object = [string]$Adapter.Name }
+                }
+            }
+        }
+        if ($StorageRdma -eq 0) {
+            [PSCustomObject]@{ Check = 'NoStorageRdma'; Object = '' }
+        }
+    }
+
+    $PfcPriorities = @($NetworkData.Qos.PfcPriorities | Where-Object { $null -ne $_ -and [string]$_ -ne '' } | ForEach-Object { [string]$_ })
+    foreach ($Adapter in $Adapters) {
+        if ([string]$Adapter.RdmaEnabled -eq 'True' -and [string]$Adapter.RdmaType -in '3', '4' -and
             ($PfcPriorities.Count -eq 0 -or [string]$Adapter.DcbEnabled -ne 'True')) {
             [PSCustomObject]@{ Check = 'RocePfc'; Object = [string]$Adapter.Name }
         }
@@ -950,7 +1063,26 @@ function Resolve-HvNetworkFinding {
         [PSCustomObject]@{ Check = 'DcbxWilling'; Object = '' }
     }
 
-    foreach ($Vnic in @($NetworkData.HostVnics | Where-Object { $_ })) {
+    if ($PfcPriorities.Count -gt 0) {
+        $EtsPriorities = @($NetworkData.Qos.TrafficClasses | Where-Object {
+                $_ -and [string]$_.Algorithm -eq 'ETS' -and [string]$_.Name -ne '[Default]'
+            } | ForEach-Object { @($_.Priority) } | ForEach-Object { [string]$_ })
+        $Policies = @($NetworkData.Qos.Policies | Where-Object { $_ })
+        $Traffic = [ordered]@{
+            SMB = @($Policies | Where-Object { [string]$_.Template -in 'SMB', 'SMBDirect' -or [string]$_.NetDirectPort -eq '445' })
+            Cluster = @($Policies | Where-Object { [string]$_.Template -eq 'Cluster' })
+        }
+        foreach ($Kind in @($Traffic.Keys)) {
+            foreach ($Policy in $Traffic[$Kind]) {
+                if ([string]$Policy.Priority -ne '' -and $EtsPriorities -notcontains [string]$Policy.Priority) {
+                    [PSCustomObject]@{ Check = 'DcbTrafficClass'; Object = $Kind }
+                    break
+                }
+            }
+        }
+    }
+
+    foreach ($Vnic in $Vnics) {
         $SwitchItem = $Switches | Where-Object { [string]$_.Name -eq [string]$Vnic.SwitchName } | Select-Object -First 1
         if ([string]$Vnic.RdmaEnabled -eq 'True' -and $SwitchItem -and [string]$SwitchItem.EmbeddedTeaming -eq 'True' -and
             @($SwitchItem.Members | Where-Object { $_ }).Count -ge 2 -and [string]::IsNullOrEmpty([string]$Vnic.MappedAdapter)) {

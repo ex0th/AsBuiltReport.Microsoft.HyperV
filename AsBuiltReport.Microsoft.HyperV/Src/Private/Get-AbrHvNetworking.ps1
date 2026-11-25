@@ -108,6 +108,8 @@
                                     RdmaType = $(if ($RdmaType) { [string](@($RdmaType.RegistryValue) | Select-Object -First 1) } else { '' })
                                     JumboPacket = $(if ($Jumbo) { [string](@($Jumbo.RegistryValue) | Select-Object -First 1) } else { '' })
                                     DcbEnabled = $(if ($Dcb) { [string][bool]$Dcb.Enabled } else { '' })
+                                    IPAddresses = [string[]]@(Get-NetIPAddress -InterfaceAlias $Adapter.Name -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+                                            ForEach-Object { '{0}/{1}' -f $_.IPAddress, $_.PrefixLength })
                                 }
                             })
 
@@ -133,6 +135,8 @@
                                     [PSCustomObject]@{
                                         Name = [string]$_.Name
                                         Priority = [string]$_.PriorityValue8021Action
+                                        Template = [string]$_.Template
+                                        NetDirectPort = [string]$_.NetDirectPortMatchCondition
                                     }
                                 })
                             $Qos.DcbxWilling = [string](Get-NetQosDcbxSetting -ErrorAction SilentlyContinue | Select-Object -First 1).Willing
@@ -146,8 +150,20 @@
                         }
                     } | Sort-Object -Property NodeName)
                 $IsS2D = (@($HvEnvironment.StorageTopology) -contains 'S2D')
+                # Storage traffic between S2D nodes uses the cluster networks with the role Cluster or Cluster and client.
+                $StorageSubnets = @()
+                if ($HvClusterSession) {
+                    $StorageSubnets = @(Invoke-Command -Session $HvClusterSession -ErrorAction SilentlyContinue -ScriptBlock {
+                            Get-ClusterNetwork -ErrorAction SilentlyContinue | Where-Object { [int]$_.Role -in 1, 3 } | ForEach-Object {
+                                $Network = $_
+                                for ($Index = 0; $Index -lt @($Network.Ipv4Addresses).Count; $Index++) {
+                                    '{0}/{1}' -f @($Network.Ipv4Addresses)[$Index], @($Network.Ipv4PrefixLengths)[$Index]
+                                }
+                            }
+                        } | ForEach-Object { [string]$_ })
+                }
                 $Findings = @(foreach ($HostItem in $NetworkData) {
-                        Resolve-HvNetworkFinding -NetworkData $HostItem -IsS2D:$IsS2D | ForEach-Object {
+                        Resolve-HvNetworkFinding -NetworkData $HostItem -IsS2D:$IsS2D -StorageSubnet $StorageSubnets | ForEach-Object {
                             $_ | Add-Member -MemberType NoteProperty -Name 'NodeName' -Value $HostItem.NodeName -PassThru
                         }
                     })
@@ -240,8 +256,13 @@
                         [PSCustomObject][ordered]@{
                             $LocalizedData.HostName = $HostItem.NodeName
                             $LocalizedData.PfcPriorities = ConvertTo-HvDisplayValue $Qos.PfcPriorities
+                            # ETS classes have a bandwidth share; strict priority classes have none.
                             $LocalizedData.TrafficClasses = ConvertTo-HvDisplayValue @($Qos.TrafficClasses | ForEach-Object {
-                                    $LocalizedData.ValueTrafficClass -f $_.Name, (@($_.Priority) -join ','), $_.BandwidthPercentage, $_.Algorithm
+                                    if ($_.Algorithm -eq 'ETS') {
+                                        $LocalizedData.ValueTrafficClassEts -f $_.Name, (@($_.Priority) -join ','), $_.BandwidthPercentage
+                                    } else {
+                                        $LocalizedData.ValueTrafficClassStrict -f $_.Name, (@($_.Priority) -join ',')
+                                    }
                                 })
                             $LocalizedData.QosPolicies = ConvertTo-HvDisplayValue @($Qos.Policies | ForEach-Object {
                                     $LocalizedData.ValuePolicy -f $_.Name, $_.Priority
@@ -252,40 +273,45 @@
                 #endregion Objects
 
                 #region Health checks
+                # Every check names the cells it highlights: table, key column (empty = every row of the host)
+                # and the highlighted column. Checks without targets are only reported as text.
                 $Checks = [ordered]@{
                     SetLoadBalancing = @{
                         Enabled = $Healthcheck.Networking.SetLoadBalancing
-                        Table = $SwitchObj
-                        KeyColumn = $LocalizedData.SwitchName
-                        Column = $LocalizedData.LoadBalancing
+                        Targets = @(@{ Table = $SwitchObj; KeyColumn = $LocalizedData.SwitchName; Column = $LocalizedData.LoadBalancing })
                         Text = $LocalizedData.SetLoadBalancingBP
                     }
                     RdmaDisabled = @{
                         Enabled = $Healthcheck.Networking.RdmaState
-                        Table = $AdapterObj
-                        KeyColumn = $LocalizedData.AdapterName
-                        Column = $LocalizedData.Rdma
+                        Targets = @(
+                            @{ Table = $AdapterObj; KeyColumn = $LocalizedData.AdapterName; Column = $LocalizedData.Rdma }
+                            @{ Table = $VnicObj; KeyColumn = $LocalizedData.VnicName; Column = $LocalizedData.Rdma }
+                        )
                         Text = $LocalizedData.RdmaStateBP
+                    }
+                    NoStorageRdma = @{
+                        Enabled = $Healthcheck.Networking.RdmaState
+                        Targets = @()
+                        Text = $LocalizedData.NoStorageRdmaBP
                     }
                     RocePfc = @{
                         Enabled = $Healthcheck.Networking.RocePfc
-                        Table = $AdapterObj
-                        KeyColumn = $LocalizedData.AdapterName
-                        Column = $LocalizedData.RdmaType
+                        Targets = @(@{ Table = $AdapterObj; KeyColumn = $LocalizedData.AdapterName; Column = $LocalizedData.RdmaType })
                         Text = $LocalizedData.RocePfcBP
                     }
                     DcbxWilling = @{
                         Enabled = $Healthcheck.Networking.DcbxWilling
-                        Table = $DcbObj
-                        KeyColumn = ''
-                        Column = $LocalizedData.DcbxWilling
+                        Targets = @(@{ Table = $DcbObj; KeyColumn = ''; Column = $LocalizedData.DcbxWilling })
                         Text = $LocalizedData.DcbxWillingBP
+                    }
+                    DcbTrafficClass = @{
+                        Enabled = $Healthcheck.Networking.DcbTrafficClass
+                        Targets = @(@{ Table = $DcbObj; KeyColumn = ''; Column = $LocalizedData.TrafficClasses })
+                        Text = $LocalizedData.DcbTrafficClassBP
                     }
                     VnicTeamMapping = @{
                         Enabled = $Healthcheck.Networking.VnicTeamMapping
-                        Table = $VnicObj
-                        KeyColumn = $LocalizedData.VnicName
-                        Column = $LocalizedData.MappedAdapter
+                        Targets = @(@{ Table = $VnicObj; KeyColumn = $LocalizedData.VnicName; Column = $LocalizedData.MappedAdapter })
                         Text = $LocalizedData.VnicTeamMappingBP
                     }
                 }
@@ -298,10 +324,12 @@
                     }
                     $ShownChecks.Add($CheckName)
                     foreach ($Finding in $CheckFindings) {
-                        @($Check.Table) | Where-Object {
-                            $_.$($LocalizedData.HostName) -eq $Finding.NodeName -and
-                            ($Check.KeyColumn -eq '' -or $_.$($Check.KeyColumn) -eq $Finding.Object)
-                        } | Set-Style -Style Warning -Property $Check.Column
+                        foreach ($Target in @($Check.Targets)) {
+                            @($Target.Table) | Where-Object {
+                                $_.$($LocalizedData.HostName) -eq $Finding.NodeName -and
+                                ($Target.KeyColumn -eq '' -or $_.$($Target.KeyColumn) -eq $Finding.Object)
+                            } | Set-Style -Style Warning -Property $Target.Column
+                        }
                     }
                 }
                 # Writes the health check text of the given checks below the table they highlight.
@@ -385,7 +413,7 @@
                                 $TableParams['Caption'] = "- $($TableParams.Name)"
                             }
                             $AdapterObj | Table @TableParams
-                            & $WriteChecks 'RdmaDisabled', 'RocePfc'
+                            & $WriteChecks 'RdmaDisabled', 'NoStorageRdma', 'RocePfc'
                         }
                     }
 
@@ -404,7 +432,7 @@
                                 $TableParams['Caption'] = "- $($TableParams.Name)"
                             }
                             $DcbObj | Table @TableParams
-                            & $WriteChecks 'DcbxWilling'
+                            & $WriteChecks 'DcbxWilling', 'DcbTrafficClass'
                         }
                     }
                 }

@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Hyper-V Hosts` section with the Hyper-V specific host settings that AsBuiltReport.Microsoft.Windows does not cover: hypervisor scheduler, virtualization-based security and running security services, Secure Boot, TPM, VM configuration versions, enhanced session mode, GPU partitioning, Discrete Device Assignment and virtual Fibre Channel SANs; new `InfoLevel.Host`
 - Health checks for hosts with the classic hypervisor scheduler and SMT and for hosts with Secure Boot disabled
 - `Virtual Networking` section with virtual switches including Switch Embedded Teaming, host vNICs with VLAN, RDMA and team mapping, physical adapters with RDMA and jumbo frames, and Data Center Bridging (PFC, traffic classes, QoS policies); new `InfoLevel.Networking`
-- Health checks for SET switches without Hyper-V port load balancing, disabled RDMA on Storage Spaces Direct hosts, RoCE without PFC, DCBX willing mode and RDMA host vNICs without team mapping
+- Health checks for SET switches without Hyper-V port load balancing, Storage Spaces Direct hosts without RDMA on a cluster network, disabled RDMA on adapters that carry storage traffic, RoCE without PFC, DCBX willing mode, SMB or cluster QoS policies without an ETS traffic class and RDMA host vNICs without team mapping
 - `Storage Spaces Direct` section with S2D configuration and cache, storage pool with capacity and recommended reserve, physical disks per node, virtual disks with resiliency and tiers, fault domains, storage jobs and Health Service faults; new `InfoLevel.StorageS2D`
 - Health checks for unhealthy storage pools, physical disks and virtual disks, a pool reserve below one capacity drive per node, running storage jobs and Health Service faults
 - `Shared Block Storage` section for 3-tier environments with iSCSI sessions and portals, Fibre Channel ports, Multipath I/O settings, shared disks with their number of paths and the cluster disks; new `InfoLevel.Storage3Tier`
@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pester tests for the environment classification, report configuration, report conventions and localization data
 
 ### Fixed
+
+- The RDMA health check reported the members of management and VM switches although dedicated adapters carried the storage traffic; only adapters on cluster networks and SET members below RDMA host vNICs are rated now
+- Traffic classes with strict priority were shown with an empty bandwidth
+- Virtual disks created with storage tiers showed no provisioning type
 
 - Fibre Channel disks and initiator ports were not detected because the Storage module reports `FibreChannel`, not `Fibre Channel`
 - Clustered Storage Spaces volumes (bus type `Spaces`) are now counted as S2D or shared SAS evidence

@@ -64,6 +64,7 @@
             "RdmaState": true,
             "RocePfc": true,
             "DcbxWilling": true,
+            "DcbTrafficClass": true,
             "VnicTeamMapping": true
         },
         "StorageS2D": {
