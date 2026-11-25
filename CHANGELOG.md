@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ##### This project is community maintained and has no sponsorship from Microsoft, its employees or any of its affiliates.
 
-## [0.1.0] - Unreleased
+## [0.2.0] - 2026-11-25
+
+### Added
+
+- Health checks for members of SET switches that are not up and for SET teams with different link speeds, for clusters where a node that is up owns no roles while another node runs them (paused nodes are ignored) with a note when all Cluster Shared Volumes have the same owner, and for hosts that use CredSSP for live migration; new keys `Networking.SetMemberState`, `Networking.SetMemberLinkSpeed`, `Cluster.RoleDistribution` and `LiveMigration.CredSSP`
+- Note when live migration uses SMB but no adapter on a live migration network has RDMA enabled
+
+### Fixed
+
+- The RDMA health check rated management and live migration adapters: storage networks are now the Cluster only networks that carry RDMA, the interfaces of SMB multichannel constraints and RDMA host vNICs; Cluster and client networks are never rated, and a host that uses RDMA on one storage path is not reported. Findings for host vNICs are shown below the host vNIC table
+- Live migration deviations name the value of every host (e.g. `Authentication: CredSSP (node01), Kerberos (node02)`)
+- Node consistency: the reference column is named `Reference`, and switches, host vNICs, RDMA and traffic classes are shown as readable values
+- The storage pool heading and caption use the cluster as object like all other tables; the pool name is shown in the table
+- S2D configuration shows `No cache devices (single media type)` instead of the cache settings when the pool has no cache devices
+- Cluster Shared Volumes show the free space with size and percentage in one column
+- The introduction of the Hyper-V Hosts section no longer says that the network adapters are documented by the Windows report
+
+## [0.1.0] - 2026-11-25
 
 ### Added
 
@@ -38,8 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Node Consistency` section that compares operating system, hotfixes, hardware, Hyper-V settings, networking, storage and installed features between the nodes, with the deviations and (InfoLevel 2) the full comparison per category; new `InfoLevel.Consistency` and one health check per category
 - Optional `Virtual Machines` inventory with host, state, generation and version, processors, memory, virtual hard disks, network and checkpoints, and (InfoLevel 2) the details, disks and network adapters of every virtual machine; new `InfoLevel.VirtualMachines` (0 by default)
 - Health checks for virtual machines with checkpoints, virtual machines on cluster nodes that are not clustered, configuration versions below the host default and network adapters without a virtual switch
-- Health checks for members of SET switches that are not up and for SET teams with different link speeds, for clusters where a node that is up owns no roles while another node runs them (paused nodes are ignored) with a note when all Cluster Shared Volumes have the same owner, and for hosts that use CredSSP for live migration; new keys `Networking.SetMemberState`, `Networking.SetMemberLinkSpeed`, `Cluster.RoleDistribution` and `LiveMigration.CredSSP`
-- Note when live migration uses SMB but no adapter on a live migration network has RDMA enabled
 - Health checks for failed or partially online roles, Cluster Shared Volumes that are not online, use redirected I/O (ReFS is expected and ignored) or run out of free space, a missing or offline CAU self-updating role and a failed last CAU run
 - Detection evidence for the Hyper-V role per host, physical disk resources, Cluster Shared Volumes, Scale-Out File Server roles and SMB shares that hold virtual hard disks
 - Readable values for the cluster functional level and the auto balancer mode and level
@@ -53,14 +68,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The RDMA health check reported the members of management and VM switches although dedicated adapters carried the storage traffic; only adapters on cluster networks and SET members below RDMA host vNICs are rated now
 - Traffic classes with strict priority were shown with an empty bandwidth
 - Virtual disks created with storage tiers showed no provisioning type
-- The RDMA health check rated management and live migration adapters: storage networks are now the Cluster only networks that carry RDMA, the interfaces of SMB multichannel constraints and RDMA host vNICs; Cluster and client networks are never rated, and a host that uses RDMA on one storage path is not reported. Findings for host vNICs are shown below the host vNIC table
-- Live migration deviations name the value of every host (e.g. `Authentication: CredSSP (node01), Kerberos (node02)`)
-- Node consistency: the reference column is named `Reference`, and switches, host vNICs, RDMA and traffic classes are shown as readable values
-- The storage pool heading and caption use the cluster as object like all other tables; the pool name is shown in the table
-- S2D configuration shows `No cache devices (single media type)` instead of the cache settings when the pool has no cache devices
-- Cluster Shared Volumes show the free space with size and percentage in one column
-- The introduction of the Hyper-V Hosts section no longer says that the network adapters are documented by the Windows report
-
 - Fibre Channel disks and initiator ports were not detected because the Storage module reports `FibreChannel`, not `Fibre Channel`
 - Clustered Storage Spaces volumes (bus type `Spaces`) are now counted as S2D or shared SAS evidence
 - Node names are spelled the same way in all sections (taken from the cluster)

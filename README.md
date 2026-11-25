@@ -60,7 +60,7 @@ The Microsoft Hyper-V As Built Report supports the following versions;
 - Azure Local (formerly Azure Stack HCI)
 
 > [!NOTE]
-> Version 0.1.0 is an early development release and has not yet been validated against live clusters.
+> Version 0.2.0 is an early development release and has only been tested against a few clusters.
 
 ### PowerShell
 This report is compatible with the following PowerShell versions;
