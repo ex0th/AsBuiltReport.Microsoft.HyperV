@@ -190,12 +190,15 @@ if ($CodeCoverage -and $TestResults.CodeCoverage) {
     Write-Host "Code Coverage Summary" -ForegroundColor Yellow
     Write-Host "======================================" -ForegroundColor Cyan
 
+    # Pester 5 property names (Pester 4 used NumberOfCommandsAnalyzed etc.).
     $Coverage = $TestResults.CodeCoverage
-    $CoveragePercent = [math]::Round(($Coverage.NumberOfCommandsExecuted / $Coverage.NumberOfCommandsAnalyzed) * 100, 2)
+    $Analyzed = [int]$Coverage.CommandsAnalyzedCount
+    $Executed = [int]$Coverage.CommandsExecutedCount
+    $CoveragePercent = if ($Analyzed -gt 0) { [math]::Round($Executed / $Analyzed * 100, 2) } else { 0 }
 
-    Write-Host "Commands Analyzed: $($Coverage.NumberOfCommandsAnalyzed)" -ForegroundColor White
-    Write-Host "Commands Executed: $($Coverage.NumberOfCommandsExecuted)" -ForegroundColor White
-    Write-Host "Commands Missed: $($Coverage.NumberOfCommandsMissed)" -ForegroundColor White
+    Write-Host "Commands Analyzed: $Analyzed" -ForegroundColor White
+    Write-Host "Commands Executed: $Executed" -ForegroundColor White
+    Write-Host "Commands Missed: $($Coverage.CommandsMissedCount)" -ForegroundColor White
     Write-Host "Coverage: $CoveragePercent%" -ForegroundColor $(if ($CoveragePercent -ge 80) { 'Green' } elseif ($CoveragePercent -ge 60) { 'Yellow' } else { 'Red' })
 }
 
