@@ -294,8 +294,10 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     MigrationNetworkBP = Lassen Sie in den Livemigrationseinstellungen des Clusters mindestens ein Netzwerk zu, vorzugsweise ein dediziertes Netzwerk.
     HostMigrationEnabledFinding = Eingehende und ausgehende Livemigrationen sind in den Hyper-V-Einstellungen der folgenden Hosts deaktiviert: {0}.
     HostMigrationEnabledBP = Aktivieren Sie die Livemigration, wenn diese Hosts laufende virtuelle Computer verschieben sollen.
-    SettingsConsistencyFinding = Die folgenden Livemigrationseinstellungen unterscheiden sich zwischen den Hosts: {0} (Hosts: {1}).
+    SettingsConsistencyFinding = Die folgenden Livemigrationseinstellungen unterscheiden sich zwischen den Hosts: {0}.
     SettingsConsistencyBP = Verwenden Sie auf allen Hosts dieselben Einstellungen, damit sich Migrationen in jede Richtung gleich verhalten.
+    CredSSPFinding = Die folgenden Hosts verwenden CredSSP für die Authentifizierung der Livemigration: {0}. Mit CredSSP kann eine Migration nur aus einer Sitzung auf dem Quellhost gestartet werden.
+    CredSSPBP = Verwenden Sie Kerberos mit eingeschränkter Delegierung für die Dienste cifs und Microsoft Virtual System Migration Service zwischen den Hosts.
 '@
 
     # Get-AbrHvClusterRole
@@ -347,6 +349,8 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     HealthCheck = Integritätsprüfung:
     RoleStateFinding = Die folgenden Rollen sind fehlerhaft oder nicht vollständig online: {0}.
     RoleStateBP = Prüfen Sie die Ressourcen dieser Rollen im Failovercluster-Manager und die Clusterereignisse.
+    RoleDistributionFinding = Die folgenden Knoten sind aktiv, besitzen aber keine Clusterrollen, während andere Knoten alle Rollen ausführen: {0}.
+    RoleDistributionBP = Verteilen Sie die virtuellen Computer auf die Knoten (zum Beispiel mit dem automatischen Lastenausgleich oder per Livemigration), damit ein Knotenausfall weniger Workloads trifft und die Ressourcen aller Knoten genutzt werden.
 '@
 
     # Get-AbrHvClusterSharedVolume
@@ -367,7 +371,6 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     State = Status
     IoMode = E/A-Modus
     Capacity = Kapazität
-    FreeSpace = Freier Speicher
     FreePercent = Frei
     FileSystem = Dateisystem
     Node = Knoten
@@ -388,6 +391,7 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     CsvRedirectedAccessBP = Prüfen Sie die Speicheranbindung dieser Knoten.
     CsvFreeSpaceFinding = Die folgenden freigegebenen Clustervolumes haben weniger als 20 % freien Speicher (kritisch unter 10 %): {0}.
     CsvFreeSpaceBP = Halten Sie genug freien Speicher für das Wachstum virtueller Festplatten, Prüfpunkte und Speicherabbilder vor.
+    CsvOwnerNote = Hinweis: Alle freigegebenen Clustervolumes gehören {0}. Der Besitzerknoten koordiniert die Metadaten eines Volumes; eine Verteilung der Volumes auf die Knoten verteilt diese Last.
 '@
 
     # Get-AbrHvClusterAwareUpdating
@@ -438,7 +442,7 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     Collecting = Informationen zu den Hyper-V-Hosts von {0} werden gesammelt.
     HostFailed = Die Hyper-V-Hosteinstellungen von '{0}' konnten nicht gesammelt werden: {1}
     Heading = Hyper-V-Hosts
-    ParagraphSummary = Der folgende Abschnitt zeigt die Hyper-V-spezifischen Einstellungen der Hosts von {0}: Hypervisor-Scheduler, Plattformsicherheit und Konfigurationsversionen virtueller Computer. Hardware, Betriebssystem und Netzwerkadapter dokumentiert der Microsoft Windows As Built Report.
+    ParagraphSummary = Der folgende Abschnitt zeigt die Hyper-V-spezifischen Einstellungen der Hosts von {0}: Hypervisor-Scheduler, Plattformsicherheit und Konfigurationsversionen virtueller Computer. Das Betriebssystem und die allgemeine Windows-Konfiguration dokumentiert der Microsoft Windows As Built Report; die von Hyper-V genutzten Netzwerkadapter zeigt der Abschnitt Virtuelles Netzwerk dieses Reports.
     TableHosts = Hyper-V-Hosteinstellungen
     TableHost = Hyper-V-Hosteinstellungen
     HostName = Host
@@ -561,9 +565,16 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     HealthCheck = Integritätsprüfung:
     SetLoadBalancingFinding = Die folgenden SET-Switches verwenden nicht den Lastenausgleichsalgorithmus Hyper-V-Port: {0}.
     SetLoadBalancingBP = Hyper-V-Port ist der empfohlene Algorithmus für Switch Embedded Teaming.
-    RdmaStateFinding = RDMA ist auf den folgenden RDMA-fähigen Adaptern deaktiviert, die Speicherdatenverkehr zwischen den Knoten übertragen (Clusternetzwerke oder SET-Mitglieder unter RDMA-Host-vNICs): {0}. Storage Spaces Direct verwendet für diesen Datenverkehr RDMA (SMB Direct).
-    RdmaStateBP = Aktivieren Sie RDMA auf diesen Adaptern.
-    NoStorageRdmaFinding = Die folgenden Storage-Spaces-Direct-Hosts haben keinen Adapter mit aktiviertem RDMA in einem Clusternetzwerk: {0}. Der Speicherdatenverkehr zwischen den Knoten läuft über TCP, das mehr CPU benötigt und eine höhere Latenz hat.
+    SetMemberStateFinding = Die folgenden Mitglieder von SET-Switches sind nicht verbunden, der Switch läuft ohne Redundanz: {0}.
+    SetMemberStateBP = Prüfen Sie Verkabelung, Switch-Port und Adapter, damit jedes Teammitglied verbunden ist.
+    SetMemberLinkSpeedFinding = Die verbundenen Mitglieder der folgenden SET-Switches haben unterschiedliche Verbindungsgeschwindigkeiten: {0}.
+    SetMemberLinkSpeedBP = Verwenden Sie für alle Mitglieder eines Teams dieselbe Verbindungsgeschwindigkeit; prüfen Sie Switch-Ports, Transceiver und Kabel.
+    RdmaDisabledAdapterFinding = Die folgenden Hosts nutzen für den Speicherdatenverkehr kein RDMA, und RDMA ist auf diesen RDMA-fähigen physischen Adaptern in den Speichernetzwerken deaktiviert: {0}. Storage Spaces Direct verwendet für den Speicherdatenverkehr zwischen den Knoten RDMA (SMB Direct).
+    RdmaDisabledAdapterBP = Aktivieren Sie RDMA auf den Adaptern, die den Speicherdatenverkehr übertragen.
+    RdmaDisabledVnicFinding = Die folgenden Hosts nutzen für den Speicherdatenverkehr kein RDMA, und RDMA ist auf diesen Host-vNICs in den Speichernetzwerken deaktiviert: {0}. Storage Spaces Direct verwendet für den Speicherdatenverkehr zwischen den Knoten RDMA (SMB Direct).
+    RdmaDisabledVnicBP = Aktivieren Sie RDMA auf den Host-vNICs, die den Speicherdatenverkehr übertragen.
+    MigrationNoRdmaNote = Hinweis: Die Livemigration verwendet SMB, aber auf den folgenden Hosts hat kein Adapter in einem Livemigrationsnetzwerk RDMA aktiviert: {0}. Livemigration über SMB funktioniert auch ohne RDMA, SMB Direct senkt aber die CPU-Last und die Migrationsdauer.
+    NoStorageRdmaFinding = Die folgenden Storage-Spaces-Direct-Hosts haben keinen Adapter mit aktiviertem RDMA in einem Speichernetzwerk: {0}. Der Speicherdatenverkehr zwischen den Knoten läuft über TCP, das mehr CPU benötigt und eine höhere Latenz hat.
     NoStorageRdmaBP = Verwenden Sie RDMA-fähige Adapter für die Speichernetzwerke.
     DcbTrafficClassFinding = Priority Flow Control und eine QoS-Richtlinie sind vorhanden, aber keine ETS-Datenverkehrsklasse reserviert Bandbreite für folgenden Datenverkehr: {0}.
     DcbTrafficClassBP = Legen Sie eine ETS-Datenverkehrsklasse für die SMB-Priorität und für die Priorität des Cluster-Heartbeats an, damit Speicher- und Clusterdatenverkehr unter Last ihre Bandbreite behalten.
@@ -589,8 +600,9 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     CacheModeHDD = Cachemodus für HDD
     CachePageSize = Cacheseitengröße
     CacheMetadataReserve = Cache-Metadatenreserve
+    ValueNoCache = Keine Cachegeräte (eine Medienart)
     ValueKB = {0} KB
-    HeadingPool = Speicherpool: {0}
+    HeadingPool = Speicherpool
     TablePool = Speicherpool
     PoolName = Name
     HealthStatus = Integrität
@@ -759,10 +771,15 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     Setting = Einstellung
     HostName = Knoten
     Value = Wert
-    Reference = Die meisten Knoten
+    Reference = Referenz
     ValueMissing = Nicht vorhanden
     ValueInstalled = Installiert
     ValueNoMajority = Keine Mehrheit
+    ValueSwitch = {0}, SET: {1}, {2} Teamadapter
+    ValueVnic = {0}, VLAN {1}
+    ValueUntagged = ohne Tag
+    ValueTrafficClass = {0}: Priorität {1}, {2} %
+    ValueTrafficClassPriority = {0}: Priorität {1}
     CategoryOperatingSystem = Betriebssystem
     CategoryHotfix = Hotfixes
     CategoryHardware = Hardware

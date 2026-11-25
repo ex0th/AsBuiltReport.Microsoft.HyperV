@@ -54,6 +54,12 @@
                 }
                 $GroupData = @($GroupData | Where-Object { $_ })
                 $Roles = @(Resolve-HvClusterGroup -Group $GroupData | Sort-Object -Property Name)
+                $NodeState = @(Invoke-Command -Session $HvClusterSession -ErrorAction SilentlyContinue -ScriptBlock {
+                        Get-ClusterNode -ErrorAction SilentlyContinue | ForEach-Object {
+                            [PSCustomObject]@{ Name = [string]$_.Name; State = [string]$_.State }
+                        }
+                    })
+                $IdleNodes = @(Resolve-HvOwnerDistribution -OwnerNode @($Roles | ForEach-Object { $_.OwnerNode }) -NodeState $NodeState)
                 #endregion Collection
 
                 #region Objects
@@ -137,6 +143,11 @@
                         $Item.Row | Set-Style -Style $Item.Severity -Property $LocalizedData.NotOnlineCount
                     }
                 }
+                $ShowDistributionCheck = ($Healthcheck.Cluster.RoleDistribution -and $IdleNodes.Count -gt 0)
+                if ($ShowDistributionCheck) {
+                    @($SummaryItems | ForEach-Object { $_.Row }) | Where-Object { $IdleNodes -contains $_.$($LocalizedData.Node) } |
+                        Set-Style -Style Warning -Property $LocalizedData.RoleCount
+                }
                 #endregion Health checks
 
                 Section -Style Heading2 $LocalizedData.Heading {
@@ -156,10 +167,15 @@
                         }
                         @($SummaryItems | ForEach-Object { $_.Row }) | Table @TableParams
 
-                        if ($ShowStateCheck) {
+                        if ($ShowStateCheck -or $ShowDistributionCheck) {
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline
                             BlankLine
+                        }
+                        if ($ShowStateCheck) {
                             Write-HvHealthCheck -Area $LocalizedData.Heading -Severity (Get-HvMaxSeverity @($UnhealthyRoles | ForEach-Object { $_.StateSeverity })) -Finding ($LocalizedData.RoleStateFinding -f (($UnhealthyRoles | ForEach-Object { $_.Name }) -join ', ')) -Recommendation $LocalizedData.RoleStateBP
+                        }
+                        if ($ShowDistributionCheck) {
+                            Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.RoleDistributionFinding -f ($IdleNodes -join ', ')) -Recommendation $LocalizedData.RoleDistributionBP
                         }
 
                         if ($InfoLevel.Cluster -ge 2) {

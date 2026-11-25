@@ -794,6 +794,52 @@ function Resolve-HvSettingDeviation {
     }
 }
 
+function Format-HvSettingDeviation {
+    <#
+    .SYNOPSIS
+        Formats the values of one setting with the hosts that use them, e.g. 'CredSSP (node01), Kerberos (node02)'.
+    .DESCRIPTION
+        Pure function. Groups the hosts by the value of the property (collections are joined with ', ') in
+        the order of the first appearance; the hosts of a value are sorted. Empty values are shown as '--'.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [Object[]] $InputObject,
+
+        [Parameter(Mandatory)]
+        [String] $Property,
+
+        [String] $NameProperty = 'Name'
+    )
+
+    $Groups = [ordered]@{}
+    foreach ($Item in @($InputObject | Where-Object { $_ })) {
+        $Value = $Item.$Property
+        $Text = if ($Value -is [System.Collections.IEnumerable] -and $Value -isnot [string]) {
+            (@($Value) | ForEach-Object { [string]$_ }) -join ', '
+        } else {
+            [string]$Value
+        }
+        if ($Text -eq '') {
+            $Text = '--'
+        }
+        if (-not $Groups.Contains($Text)) {
+            $Groups[$Text] = New-Object -TypeName System.Collections.Generic.List[String]
+        }
+        $Groups[$Text].Add([string]$Item.$NameProperty)
+    }
+    (@(foreach ($Key in @($Groups.Keys)) {
+            '{0} ({1})' -f $Key, ((@($Groups[$Key]) | Sort-Object) -join ', ')
+        })) -join ', '
+}
+
 function Get-HvNodeName {
     <#
     .SYNOPSIS
@@ -989,6 +1035,75 @@ function Test-HvIpInSubnet {
     $true
 }
 
+function Resolve-HvStorageNetwork {
+    <#
+    .SYNOPSIS
+        Classifies the cluster networks into storage, excluded and live migration subnets.
+    .DESCRIPTION
+        Pure function without remote calls. Input:
+        ClusterNetwork  Name, Role (0 None, 1 Cluster only, 2 Client only, 3 Cluster and client), Subnets
+                        (CIDR) and optionally AllowedForMigration (default $true)
+        NetworkData     the network data of every host (HostVnics and Adapters with IPAddresses and RdmaEnabled)
+
+        Storage networks are the networks with the role Cluster only on which at least one adapter or host
+        vNIC of any host has RDMA enabled. If no such network exists, every network with the role Cluster only
+        counts, so hosts without any RDMA are still rated. Networks with the role Cluster and client carry
+        the management traffic and are never storage networks; they are returned as excluded subnets
+        together with the networks without cluster role.
+        Live migration subnets are the subnets of networks with a cluster role that are not excluded from
+        live migration.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [AllowEmptyCollection()]
+        [Object[]] $ClusterNetwork = @(),
+
+        [AllowEmptyCollection()]
+        [Object[]] $NetworkData = @()
+    )
+
+    $Networks = @($ClusterNetwork | Where-Object { $_ })
+    $RdmaItems = @(foreach ($HostItem in @($NetworkData | Where-Object { $_ })) {
+            @($HostItem.Adapters | Where-Object { $_ }) + @($HostItem.HostVnics | Where-Object { $_ }) |
+                Where-Object { [string]$_.RdmaEnabled -eq 'True' }
+        })
+    $HasRdma = {
+        param ($Subnets)
+        foreach ($Item in $RdmaItems) {
+            foreach ($Address in @($Item.IPAddresses | Where-Object { $_ })) {
+                foreach ($Subnet in @($Subnets | Where-Object { $_ })) {
+                    if (Test-HvIpInSubnet -IPAddress $Address -Subnet $Subnet) {
+                        return $true
+                    }
+                }
+            }
+        }
+        $false
+    }
+    $GetSubnets = {
+        param ($Items)
+        [String[]]@($Items | ForEach-Object { @($_.Subnets) } | Where-Object { $_ } | ForEach-Object { [string]$_ })
+    }
+
+    $ClusterOnly = @($Networks | Where-Object { [string]$_.Role -in '1', 'Cluster' })
+    $Storage = @($ClusterOnly | Where-Object { & $HasRdma $_.Subnets })
+    if ($Storage.Count -eq 0) {
+        $Storage = $ClusterOnly
+    }
+    [PSCustomObject]@{
+        StorageSubnets = & $GetSubnets $Storage
+        ExcludedSubnets = & $GetSubnets @($Networks | Where-Object { [string]$_.Role -notin '1', 'Cluster' })
+        MigrationSubnets = & $GetSubnets @($Networks | Where-Object {
+                [string]$_.Role -notin '0', 'None' -and $_.AllowedForMigration -ne $false
+            })
+    }
+}
+
 function Resolve-HvNetworkFinding {
     <#
     .SYNOPSIS
@@ -997,28 +1112,37 @@ function Resolve-HvNetworkFinding {
         Pure function without remote calls. Input properties of NetworkData:
         Switches (Name, EmbeddedTeaming, Members, LoadBalancingAlgorithm),
         HostVnics (Name, SwitchName, RdmaEnabled, MappedAdapter, IPAddresses),
-        Adapters (Name, Status, SwitchName, RdmaCapable, RdmaEnabled, RdmaType, DcbEnabled, IPAddresses),
-        Qos (Available, PfcPriorities, TrafficClasses (Name, Priority, Algorithm), Policies (Name, Priority,
-        Template, NetDirectPort), DcbxWilling).
+        Adapters (Name, Status, LinkSpeed, Speed, SwitchName, RdmaCapable, RdmaEnabled, RdmaType, DcbEnabled,
+        IPAddresses), Qos (Available, PfcPriorities, TrafficClasses (Name, Priority, Algorithm), Policies
+        (Name, Priority, Template, NetDirectPort), DcbxWilling), and optionally SmbConstraintInterfaces
+        (interface aliases of SMB multichannel constraints) and MigrationPerformance (live migration
+        performance option of the host).
 
         RdmaEnabled is empty for adapters without RDMA support. RdmaType uses the values of
         *NetworkDirectTechnology: 1 iWARP, 2 InfiniBand, 3 RoCE, 4 RoCEv2.
 
-        StorageSubnet lists the subnets of the cluster networks that carry cluster and storage traffic
-        (role Cluster only or Cluster and client). Only adapters with an address in these subnets are rated
-        for RDMA, so management and VM switches without RDMA are not reported. Without subnets, every
-        adapter with an address counts.
+        Storage paths of an S2D host are the adapters and host vNICs with an address in StorageSubnet, the
+        interfaces of SMB multichannel constraints and every host vNIC with RDMA enabled. Without storage
+        subnets, every adapter with an address outside ExcludeSubnet counts. Networks with the role Cluster
+        and client (management) belong to ExcludeSubnet and are never rated. As soon as one storage path of
+        the host uses RDMA, no adapter of the host is reported.
 
         Returns one object per finding with Check and Object:
-        SetLoadBalancing  SET switch that does not use the Hyper-V port load balancing algorithm
-        RdmaDisabled      S2D host: RDMA capable adapter or host vNIC on a storage network with RDMA disabled,
-                          or SET member below an RDMA host vNIC with RDMA disabled
-        NoStorageRdma     S2D host without any RDMA enabled adapter on a storage network
-        RocePfc           RoCE adapter with RDMA enabled but without PFC or with DCB disabled on the adapter
-        DcbxWilling       PFC configured and the host accepts DCBX settings from the switch
-        DcbTrafficClass   PFC and a QoS policy for SMB or cluster traffic exist, but no ETS traffic class
-                          covers its priority (Object: SMB or Cluster)
-        VnicTeamMapping   RDMA host vNIC on a SET switch with two or more members without a team mapping
+        SetLoadBalancing     SET switch that does not use the Hyper-V port load balancing algorithm
+        SetMemberState       member of a SET switch that is not up (Object: adapter)
+        SetMemberLinkSpeed   SET switch whose members that are up have different link speeds (Object: switch;
+                             Members: the adapters)
+        RdmaDisabledAdapter  S2D host without RDMA on any storage path: RDMA capable adapter on a storage path
+                             with RDMA disabled
+        RdmaDisabledVnic     the same for a host vNIC
+        NoStorageRdma        S2D host without any storage path with RDMA enabled
+        MigrationNoRdma      live migration uses SMB, but no adapter on a live migration network (MigrationSubnet)
+                             has RDMA enabled; an information, not a warning
+        RocePfc              RoCE adapter with RDMA enabled but without PFC or with DCB disabled on the adapter
+        DcbxWilling          PFC configured and the host accepts DCBX settings from the switch
+        DcbTrafficClass      PFC and a QoS policy for SMB or cluster traffic exist, but no ETS traffic class
+                             covers its priority (Object: SMB or Cluster)
+        VnicTeamMapping      RDMA host vNIC on a SET switch with two or more members without a team mapping
     .NOTES
         Version:        0.1.0
         Author:         Silas Süßmilch
@@ -1034,18 +1158,19 @@ function Resolve-HvNetworkFinding {
         [Switch] $IsS2D,
 
         [AllowEmptyCollection()]
-        [String[]] $StorageSubnet = @()
+        [String[]] $StorageSubnet = @(),
+
+        [AllowEmptyCollection()]
+        [String[]] $ExcludeSubnet = @(),
+
+        [AllowEmptyCollection()]
+        [String[]] $MigrationSubnet = @()
     )
 
-    $Subnets = @($StorageSubnet | Where-Object { $_ })
-    $OnStorageNetwork = {
-        param ($Item)
-        $Addresses = @($Item.IPAddresses | Where-Object { $_ })
-        if ($Subnets.Count -eq 0) {
-            return ($Addresses.Count -gt 0)
-        }
-        foreach ($Address in $Addresses) {
-            foreach ($Subnet in $Subnets) {
+    $InSubnet = {
+        param ($Item, $Subnets)
+        foreach ($Address in @($Item.IPAddresses | Where-Object { $_ })) {
+            foreach ($Subnet in @($Subnets | Where-Object { $_ })) {
                 if (Test-HvIpInSubnet -IPAddress $Address -Subnet $Subnet) {
                     return $true
                 }
@@ -1057,47 +1182,70 @@ function Resolve-HvNetworkFinding {
     $Switches = @($NetworkData.Switches | Where-Object { $_ })
     $Adapters = @($NetworkData.Adapters | Where-Object { $_ })
     $Vnics = @($NetworkData.HostVnics | Where-Object { $_ })
+    $Constraints = @($NetworkData.SmbConstraintInterfaces | Where-Object { $_ } | ForEach-Object { [string]$_ })
+    $HasStorageSubnet = (@($StorageSubnet | Where-Object { $_ }).Count -gt 0)
 
     foreach ($SwitchItem in $Switches) {
-        if ([string]$SwitchItem.EmbeddedTeaming -eq 'True' -and
-            -not [string]::IsNullOrEmpty([string]$SwitchItem.LoadBalancingAlgorithm) -and
+        if ([string]$SwitchItem.EmbeddedTeaming -ne 'True') {
+            continue
+        }
+        if (-not [string]::IsNullOrEmpty([string]$SwitchItem.LoadBalancingAlgorithm) -and
             [string]$SwitchItem.LoadBalancingAlgorithm -ne 'HyperVPort') {
             [PSCustomObject]@{ Check = 'SetLoadBalancing'; Object = [string]$SwitchItem.Name }
+        }
+        $Members = @(foreach ($Member in @($SwitchItem.Members | Where-Object { $_ })) {
+                $Adapters | Where-Object { [string]$_.Name -eq [string]$Member } | Select-Object -First 1
+            })
+        foreach ($Member in @($Members | Where-Object { [string]$_.Status -ne 'Up' })) {
+            [PSCustomObject]@{ Check = 'SetMemberState'; Object = [string]$Member.Name }
+        }
+        # Speed is the link speed in bit/s; the text is the fallback for data without it.
+        $UpMembers = @($Members | Where-Object { [string]$_.Status -eq 'Up' })
+        $Speeds = @($UpMembers | ForEach-Object {
+                if ([double]$_.Speed -gt 0) { [string][double]$_.Speed } else { [string]$_.LinkSpeed }
+            } | Sort-Object -Unique)
+        if ($UpMembers.Count -ge 2 -and $Speeds.Count -gt 1) {
+            [PSCustomObject]@{
+                Check = 'SetMemberLinkSpeed'
+                Object = [string]$SwitchItem.Name
+                Members = [String[]]@($UpMembers | ForEach-Object { [string]$_.Name })
+            }
         }
     }
 
     if ($IsS2D) {
-        $StorageRdma = 0
-        $Reported = New-Object -TypeName System.Collections.Generic.List[String]
-        # Adapters and host vNICs that carry a storage network.
-        foreach ($Item in @($Adapters | Where-Object { [string]$_.Status -eq 'Up' }) + $Vnics) {
-            if (-not (& $OnStorageNetwork $Item)) {
-                continue
-            }
-            if ([string]$Item.RdmaEnabled -eq 'True') {
-                $StorageRdma++
-            } elseif ([string]$Item.RdmaEnabled -eq 'False') {
-                $Reported.Add([string]$Item.Name)
-                [PSCustomObject]@{ Check = 'RdmaDisabled'; Object = [string]$Item.Name }
-            }
-        }
-        # Physical members of a SET switch that carries RDMA host vNICs need RDMA as well.
-        foreach ($SwitchItem in $Switches) {
-            $RdmaVnics = @($Vnics | Where-Object { [string]$_.SwitchName -eq [string]$SwitchItem.Name -and [string]$_.RdmaEnabled -eq 'True' })
-            if ($RdmaVnics.Count -eq 0) {
-                continue
-            }
-            foreach ($Member in @($SwitchItem.Members | Where-Object { $_ })) {
-                $Adapter = $Adapters | Where-Object { [string]$_.Name -eq [string]$Member } | Select-Object -First 1
-                if ($Adapter -and [string]$Adapter.Status -eq 'Up' -and [string]$Adapter.RdmaEnabled -eq 'False' -and
-                    -not $Reported.Contains([string]$Adapter.Name)) {
-                    $Reported.Add([string]$Adapter.Name)
-                    [PSCustomObject]@{ Check = 'RdmaDisabled'; Object = [string]$Adapter.Name }
+        $Candidates = @(@($Adapters | Where-Object { [string]$_.Status -eq 'Up' } | ForEach-Object {
+                    [PSCustomObject]@{ Kind = 'Adapter'; Item = $_; Alias = [string]$_.Name }
+                }) + @($Vnics | ForEach-Object {
+                    [PSCustomObject]@{ Kind = 'Vnic'; Item = $_; Alias = ('vEthernet ({0})' -f $_.Name) }
+                }))
+        $StoragePaths = @(foreach ($Entry in $Candidates) {
+                $IsStorage = if ($Constraints -contains $Entry.Alias -or $Constraints -contains [string]$Entry.Item.Name) {
+                    $true
+                } elseif ($Entry.Kind -eq 'Vnic' -and [string]$Entry.Item.RdmaEnabled -eq 'True') {
+                    $true
+                } elseif ($HasStorageSubnet) {
+                    & $InSubnet $Entry.Item $StorageSubnet
+                } else {
+                    (@($Entry.Item.IPAddresses | Where-Object { $_ }).Count -gt 0 -and -not (& $InSubnet $Entry.Item $ExcludeSubnet))
                 }
+                if ($IsStorage) {
+                    $Entry
+                }
+            })
+        if (-not ($StoragePaths | Where-Object { [string]$_.Item.RdmaEnabled -eq 'True' })) {
+            foreach ($Entry in @($StoragePaths | Where-Object { [string]$_.Item.RdmaEnabled -eq 'False' })) {
+                [PSCustomObject]@{ Check = "RdmaDisabled$($Entry.Kind)"; Object = [string]$Entry.Item.Name }
             }
-        }
-        if ($StorageRdma -eq 0) {
             [PSCustomObject]@{ Check = 'NoStorageRdma'; Object = '' }
+        }
+    }
+
+    if ([string]$NetworkData.MigrationPerformance -eq 'SMB' -and @($MigrationSubnet | Where-Object { $_ }).Count -gt 0) {
+        $MigrationPaths = @(@($Adapters | Where-Object { [string]$_.Status -eq 'Up' }) + $Vnics |
+                Where-Object { & $InSubnet $_ $MigrationSubnet })
+        if ($MigrationPaths.Count -gt 0 -and -not ($MigrationPaths | Where-Object { [string]$_.RdmaEnabled -eq 'True' })) {
+            [PSCustomObject]@{ Check = 'MigrationNoRdma'; Object = '' }
         }
     }
 
@@ -1466,6 +1614,39 @@ function Resolve-HvClusterGroup {
             PriorityKey = $PriorityKey
         }
     }
+}
+
+function Resolve-HvOwnerDistribution {
+    <#
+    .SYNOPSIS
+        Finds cluster nodes that are up but own nothing while another node that is up owns roles or volumes.
+    .DESCRIPTION
+        Pure function. OwnerNode lists the owner node of every role (or Cluster Shared Volume), NodeState the
+        nodes with Name and State. Only nodes in the state Up are rated, so paused or drained nodes are never
+        reported. Returns the names of the nodes that are up and own nothing, if at least two nodes are up
+        and another one owns something; otherwise nothing.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [AllowEmptyCollection()]
+        [AllowNull()]
+        [String[]] $OwnerNode = @(),
+
+        [AllowEmptyCollection()]
+        [Object[]] $NodeState = @()
+    )
+
+    $UpNodes = @($NodeState | Where-Object { $_ -and [string]$_.State -eq 'Up' } | ForEach-Object { [string]$_.Name } | Sort-Object -Unique)
+    $Owners = @($OwnerNode | Where-Object { $_ })
+    if ($UpNodes.Count -lt 2 -or -not ($UpNodes | Where-Object { $Owners -contains $_ })) {
+        return
+    }
+    $UpNodes | Where-Object { $Owners -notcontains $_ }
 }
 
 function Resolve-HvCsvState {

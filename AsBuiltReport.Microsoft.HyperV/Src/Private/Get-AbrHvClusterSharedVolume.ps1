@@ -36,6 +36,9 @@
                     $Volumes = @(Get-Volume -ErrorAction SilentlyContinue)
                     [PSCustomObject]@{
                         BlockCacheSize = (Get-Cluster -ErrorAction Stop).BlockCacheSize
+                        Nodes = @(Get-ClusterNode -ErrorAction SilentlyContinue | ForEach-Object {
+                                [PSCustomObject]@{ Name = [string]$_.Name; State = [string]$_.State }
+                            })
                         Volumes = @(foreach ($Csv in @(Get-ClusterSharedVolume -ErrorAction Stop)) {
                                 foreach ($Info in @($Csv.SharedVolumeInfo)) {
                                     $Partition = $Info.Partition
@@ -89,10 +92,13 @@
                                     $IoLabel
                                 })
                             $LocalizedData.Capacity = ConvertTo-HvSize $Volume.Size
-                            $LocalizedData.FreePercent = ConvertTo-HvPercent $CsvState.FreePercent
+                            $LocalizedData.FreePercent = $(if ($null -ne $Volume.FreeSpace) {
+                                    '{0} ({1})' -f (ConvertTo-HvSize $Volume.FreeSpace), (ConvertTo-HvPercent $CsvState.FreePercent)
+                                } else {
+                                    ConvertTo-HvPercent $CsvState.FreePercent
+                                })
                         }
                         if ($InfoLevel.Cluster -ge 2) {
-                            $InObj[$LocalizedData.FreeSpace] = ConvertTo-HvSize $Volume.FreeSpace
                             $InObj[$LocalizedData.FileSystem] = ConvertTo-HvDisplayValue $Volume.FileSystem
                         }
                         [PSCustomObject]$InObj
@@ -137,6 +143,11 @@
                             Set-Style -Style $Issue.FreeSeverity -Property $LocalizedData.FreePercent
                     }
                 }
+                # All volumes on one node is only a note: the owner node coordinates metadata, the I/O is direct.
+                $CsvOwners = @($Volumes | ForEach-Object { $_.OwnerNode } | Where-Object { $_ })
+                $ShowOwnerNote = ($Healthcheck.Cluster.RoleDistribution -and @($Volumes | Select-Object -ExpandProperty Name -Unique).Count -ge 2 -and
+                    @($CsvOwners | Sort-Object -Unique).Count -eq 1 -and
+                    @(Resolve-HvOwnerDistribution -OwnerNode $CsvOwners -NodeState @($CsvData.Nodes)).Count -gt 0)
                 #endregion Health checks
 
                 Section -Style Heading2 $LocalizedData.Heading {
@@ -150,14 +161,18 @@
                             List = $false
                         }
                         if ($InfoLevel.Cluster -ge 2) {
-                            $TableParams['ColumnWidths'] = 15, 15, 11, 8, 13, 9, 8, 9, 12
+                            $TableParams['ColumnWidths'] = 16, 16, 12, 8, 14, 10, 14, 10
                         } else {
-                            $TableParams['ColumnWidths'] = 18, 18, 13, 10, 17, 12, 12
+                            $TableParams['ColumnWidths'] = 17, 17, 12, 9, 17, 12, 16
                         }
                         if ($Report.ShowTableCaptions) {
                             $TableParams['Caption'] = "- $($TableParams.Name)"
                         }
                         $CsvObj | Table @TableParams
+                        if ($ShowOwnerNote) {
+                            Paragraph ($LocalizedData.CsvOwnerNote -f @($CsvOwners)[0])
+                            BlankLine
+                        }
 
                         if ($ShowStateCheck -or $ShowIoCheck -or $ShowFreeCheck) {
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline

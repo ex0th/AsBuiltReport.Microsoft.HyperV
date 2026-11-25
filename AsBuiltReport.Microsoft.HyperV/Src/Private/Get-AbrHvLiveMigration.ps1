@@ -134,28 +134,43 @@
                 #endregion Cluster object
 
                 #region Host objects
-                $HostObj = @(foreach ($HostItem in $HostData) {
-                        $PerformanceLabel = $LocalizedData["Performance$($HostItem.PerformanceOption)"]
-                        $InObj = [ordered]@{
-                            $LocalizedData.HostName = $HostItem.Name
-                            $LocalizedData.Enabled = ConvertTo-HvDisplayValue $HostItem.Enabled
-                            $LocalizedData.MaxMigrations = ConvertTo-HvDisplayValue $HostItem.MaxMigrations
-                            $LocalizedData.MaxStorageMigrations = ConvertTo-HvDisplayValue $HostItem.MaxStorageMigrations
-                            $LocalizedData.Authentication = ConvertTo-HvDisplayValue $HostItem.Authentication
-                            $LocalizedData.PerformanceOption = $(if ($PerformanceLabel) {
+                # Display values of every setting, independent of the InfoLevel: the health check texts name
+                # deviating settings with their values also when the InfoLevel hides the column.
+                $DisplayData = @(foreach ($HostItem in $HostData) {
+                        $PerformanceLabel = if ($HostItem.PerformanceOption) { $LocalizedData["Performance$($HostItem.PerformanceOption)"] }
+                        [PSCustomObject]@{
+                            Name = $HostItem.Name
+                            Enabled = ConvertTo-HvDisplayValue $HostItem.Enabled
+                            MaxMigrations = ConvertTo-HvDisplayValue $HostItem.MaxMigrations
+                            MaxStorageMigrations = ConvertTo-HvDisplayValue $HostItem.MaxStorageMigrations
+                            Authentication = ConvertTo-HvDisplayValue $HostItem.Authentication
+                            PerformanceOption = $(if ($PerformanceLabel) {
                                     $PerformanceLabel
                                 } else {
                                     ConvertTo-HvDisplayValue $HostItem.PerformanceOption
                                 })
-                        }
-                        if ($InfoLevel.LiveMigration -ge 2) {
-                            $InObj[$LocalizedData.UseAnyNetwork] = ConvertTo-HvDisplayValue $HostItem.UseAnyNetwork
-                            $InObj[$LocalizedData.HostMigrationNetworks] = ConvertTo-HvDisplayValue $HostItem.MigrationNetworks
-                            $InObj[$LocalizedData.SmbLimit] = $(if ($HostItem.SmbBandwidthLimit) {
+                            UseAnyNetwork = ConvertTo-HvDisplayValue $HostItem.UseAnyNetwork
+                            MigrationNetworks = ConvertTo-HvDisplayValue $HostItem.MigrationNetworks
+                            SmbBandwidthLimit = $(if ($HostItem.SmbBandwidthLimit) {
                                     $LocalizedData.ValueMbps -f [math]::Round([double]$HostItem.SmbBandwidthLimit * 8 / 1000000)
                                 } else {
                                     $LocalizedData.ValueNoLimit
                                 })
+                        }
+                    })
+                $HostObj = @(foreach ($Display in $DisplayData) {
+                        $InObj = [ordered]@{
+                            $LocalizedData.HostName = $Display.Name
+                            $LocalizedData.Enabled = $Display.Enabled
+                            $LocalizedData.MaxMigrations = $Display.MaxMigrations
+                            $LocalizedData.MaxStorageMigrations = $Display.MaxStorageMigrations
+                            $LocalizedData.Authentication = $Display.Authentication
+                            $LocalizedData.PerformanceOption = $Display.PerformanceOption
+                        }
+                        if ($InfoLevel.LiveMigration -ge 2) {
+                            $InObj[$LocalizedData.UseAnyNetwork] = $Display.UseAnyNetwork
+                            $InObj[$LocalizedData.HostMigrationNetworks] = $Display.MigrationNetworks
+                            $InObj[$LocalizedData.SmbLimit] = $Display.SmbBandwidthLimit
                         }
                         [PSCustomObject]$InObj
                     })
@@ -195,6 +210,13 @@
                         $HostObj | Where-Object { $_.$($LocalizedData.HostName) -eq $Deviation.Name -and $_.PSObject.Properties[$Column] } |
                             Set-Style -Style Warning -Property $Column
                     }
+                }
+
+                $HostsCredSSP = @($HostData | Where-Object { [string]$_.Authentication -eq 'CredSSP' } | ForEach-Object { $_.Name })
+                $ShowCredSSPCheck = ($Healthcheck.LiveMigration.CredSSP -and $HostsCredSSP.Count -gt 0)
+                if ($ShowCredSSPCheck) {
+                    $HostObj | Where-Object { $HostsCredSSP -contains $_.$($LocalizedData.HostName) } |
+                        Set-Style -Style Warning -Property $LocalizedData.Authentication
                 }
                 #endregion Health checks
 
@@ -254,16 +276,21 @@
                             $HostObj | Table @TableParams
                         }
 
-                        if ($ShowEnabledCheck -or $ShowConsistencyCheck) {
+                        if ($ShowEnabledCheck -or $ShowConsistencyCheck -or $ShowCredSSPCheck) {
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline
                             BlankLine
                             if ($ShowEnabledCheck) {
                                 Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.HostMigrationEnabledFinding -f ($HostsDisabled -join ', ')) -Recommendation $LocalizedData.HostMigrationEnabledBP
                             }
                             if ($ShowConsistencyCheck) {
-                                $Settings = @($Deviations | ForEach-Object { $CompareMap[$_.Property] } | Select-Object -Unique)
-                                $Hosts = @($Deviations | ForEach-Object { $_.Name } | Sort-Object -Unique)
-                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.SettingsConsistencyFinding -f ($Settings -join ', '), ($Hosts -join ', ')) -Recommendation $LocalizedData.SettingsConsistencyBP
+                                # Every deviating setting with the value of every host, e.g. "Authentication: CredSSP (node01), Kerberos (node02)".
+                                $Settings = @(foreach ($Property in @($Deviations | ForEach-Object { $_.Property } | Select-Object -Unique)) {
+                                        '{0}: {1}' -f $CompareMap[$Property], (Format-HvSettingDeviation -InputObject $DisplayData -Property $Property)
+                                    })
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.SettingsConsistencyFinding -f ($Settings -join '; ')) -Recommendation $LocalizedData.SettingsConsistencyBP
+                            }
+                            if ($ShowCredSSPCheck) {
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.CredSSPFinding -f ($HostsCredSSP -join ', ')) -Recommendation $LocalizedData.CredSSPBP
                             }
                         }
                     }

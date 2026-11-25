@@ -293,8 +293,10 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     MigrationNetworkBP = Allow at least one network, preferably a dedicated network, in the live migration settings of the cluster.
     HostMigrationEnabledFinding = Incoming and outgoing live migrations are disabled in the Hyper-V settings of the following hosts: {0}.
     HostMigrationEnabledBP = Enable live migration if these hosts should move running virtual machines.
-    SettingsConsistencyFinding = The following live migration settings differ between hosts: {0} (hosts: {1}).
+    SettingsConsistencyFinding = The following live migration settings differ between hosts: {0}.
     SettingsConsistencyBP = Use the same settings on all hosts so that migrations behave the same in every direction.
+    CredSSPFinding = The following hosts use CredSSP for live migration authentication: {0}. With CredSSP, a migration can only be started from a session on the source host.
+    CredSSPBP = Use Kerberos with constrained delegation for the services cifs and Microsoft Virtual System Migration Service between the hosts.
 '@
 
     # Get-AbrHvClusterRole
@@ -346,6 +348,8 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     HealthCheck = Health Check:
     RoleStateFinding = The following roles failed or are not completely online: {0}.
     RoleStateBP = Check the resources of these roles in Failover Cluster Manager and the cluster events.
+    RoleDistributionFinding = The following nodes are up but own no clustered roles, while other nodes run all roles: {0}.
+    RoleDistributionBP = Distribute the virtual machines across the nodes (for example with the auto balancer or live migration) so that a node failure affects fewer workloads and the resources of every node are used.
 '@
 
     # Get-AbrHvClusterSharedVolume
@@ -366,7 +370,6 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     State = State
     IoMode = I/O Mode
     Capacity = Capacity
-    FreeSpace = Free Space
     FreePercent = Free
     FileSystem = File System
     Node = Node
@@ -387,6 +390,7 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     CsvRedirectedAccessBP = Check the storage connectivity of these nodes.
     CsvFreeSpaceFinding = The following Cluster Shared Volumes have less than 20 % free space (critical below 10 %): {0}.
     CsvFreeSpaceBP = Keep enough free space for virtual hard disk growth, checkpoints and memory dumps.
+    CsvOwnerNote = Note: All Cluster Shared Volumes are owned by {0}. The owner node coordinates the metadata of a volume; distributing the volumes across the nodes spreads this load.
 '@
 
     # Get-AbrHvClusterAwareUpdating
@@ -437,7 +441,7 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     Collecting = Collecting Hyper-V host information for {0}.
     HostFailed = Unable to collect the Hyper-V host settings of '{0}': {1}
     Heading = Hyper-V Hosts
-    ParagraphSummary = The following section shows the Hyper-V specific settings of the hosts of {0}: hypervisor scheduler, platform security and virtual machine configuration versions. Hardware, operating system and network adapters are documented by the Microsoft Windows As Built Report.
+    ParagraphSummary = The following section shows the Hyper-V specific settings of the hosts of {0}: hypervisor scheduler, platform security and virtual machine configuration versions. The operating system and the general Windows configuration are documented by the Microsoft Windows As Built Report; the network adapters used by Hyper-V are listed in the Virtual Networking section of this report.
     TableHosts = Hyper-V Host Settings
     TableHost = Hyper-V Host Settings
     HostName = Host
@@ -560,9 +564,16 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     HealthCheck = Health Check:
     SetLoadBalancingFinding = The following SET switches do not use the Hyper-V port load balancing algorithm: {0}.
     SetLoadBalancingBP = Hyper-V port is the recommended algorithm for Switch Embedded Teaming.
-    RdmaStateFinding = RDMA is disabled on the following RDMA capable adapters that carry storage traffic between the nodes (cluster networks or SET members below RDMA host vNICs): {0}. Storage Spaces Direct uses RDMA (SMB Direct) for this traffic.
-    RdmaStateBP = Enable RDMA on these adapters.
-    NoStorageRdmaFinding = The following Storage Spaces Direct hosts have no adapter with RDMA enabled on a cluster network: {0}. The storage traffic between the nodes uses TCP, which needs more CPU and has a higher latency.
+    SetMemberStateFinding = The following members of SET switches are not up, so the switch runs without redundancy: {0}.
+    SetMemberStateBP = Check the cabling, the switch port and the adapter, so that every team member is connected.
+    SetMemberLinkSpeedFinding = The members of the following SET switches that are up have different link speeds: {0}.
+    SetMemberLinkSpeedBP = Use the same link speed for every member of a team; check the switch ports, the transceivers and the cables.
+    RdmaDisabledAdapterFinding = The following hosts use no RDMA for the storage traffic, and RDMA is disabled on these RDMA capable physical adapters on the storage networks: {0}. Storage Spaces Direct uses RDMA (SMB Direct) for the storage traffic between the nodes.
+    RdmaDisabledAdapterBP = Enable RDMA on the adapters that carry the storage traffic.
+    RdmaDisabledVnicFinding = The following hosts use no RDMA for the storage traffic, and RDMA is disabled on these host vNICs on the storage networks: {0}. Storage Spaces Direct uses RDMA (SMB Direct) for the storage traffic between the nodes.
+    RdmaDisabledVnicBP = Enable RDMA on the host vNICs that carry the storage traffic.
+    MigrationNoRdmaNote = Note: Live migration uses SMB, but no adapter on a live migration network has RDMA enabled on the following hosts: {0}. Live migration over SMB works without RDMA, but SMB Direct reduces the CPU load and the migration time.
+    NoStorageRdmaFinding = The following Storage Spaces Direct hosts have no adapter with RDMA enabled on a storage network: {0}. The storage traffic between the nodes uses TCP, which needs more CPU and has a higher latency.
     NoStorageRdmaBP = Use RDMA capable adapters for the storage networks.
     DcbTrafficClassFinding = Priority flow control and a QoS policy exist, but no ETS traffic class reserves bandwidth for the following traffic: {0}.
     DcbTrafficClassBP = Create an ETS traffic class for the SMB priority and for the cluster heartbeat priority, so that storage and cluster traffic keep their bandwidth under load.
@@ -588,8 +599,9 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     CacheModeHDD = Cache Mode for HDD
     CachePageSize = Cache Page Size
     CacheMetadataReserve = Cache Metadata Reserve
+    ValueNoCache = No cache devices (single media type)
     ValueKB = {0} KB
-    HeadingPool = Storage Pool: {0}
+    HeadingPool = Storage Pool
     TablePool = Storage Pool
     PoolName = Name
     HealthStatus = Health
@@ -758,10 +770,15 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     Setting = Setting
     HostName = Node
     Value = Value
-    Reference = Most Nodes
+    Reference = Reference
     ValueMissing = Not present
     ValueInstalled = Installed
     ValueNoMajority = No majority
+    ValueSwitch = {0}, SET: {1}, {2} team adapters
+    ValueVnic = {0}, VLAN {1}
+    ValueUntagged = untagged
+    ValueTrafficClass = {0}: priority {1}, {2} %
+    ValueTrafficClassPriority = {0}: priority {1}
     CategoryOperatingSystem = Operating system
     CategoryHotfix = Hotfixes
     CategoryHardware = Hardware

@@ -74,13 +74,13 @@
                         $NetAdapters = @(Get-NetAdapter -Physical -ErrorAction SilentlyContinue)
                         $Network = New-Object -TypeName System.Collections.Generic.List[Object]
                         foreach ($VSwitch in @(Get-VMSwitch -ErrorAction SilentlyContinue | Sort-Object -Property Name)) {
-                            $Network.Add((& $NewItem "Switch|$($VSwitch.Name)" ('{0}, SET {1}, {2}' -f $VSwitch.SwitchType,
+                            $Network.Add((& $NewItem "Switch|$($VSwitch.Name)" ('{0}|{1}|{2}' -f $VSwitch.SwitchType,
                                         [bool]$VSwitch.EmbeddedTeamingEnabled, @($VSwitch.NetAdapterInterfaceDescriptions).Count)))
                         }
                         foreach ($Vnic in @(Get-VMNetworkAdapter -ManagementOS -ErrorAction SilentlyContinue | Sort-Object -Property Name)) {
                             $Vlan = Get-VMNetworkAdapterVlan -ManagementOS -VMNetworkAdapterName $Vnic.Name -ErrorAction SilentlyContinue |
                                 Select-Object -First 1
-                            $Network.Add((& $NewItem "Vnic|$($Vnic.Name)" ('{0}, VLAN {1}' -f $Vnic.SwitchName, $(if ($Vlan.OperationMode -eq 'Access') {
+                            $Network.Add((& $NewItem "Vnic|$($Vnic.Name)" ('{0}|{1}' -f $Vnic.SwitchName, $(if ($Vlan.OperationMode -eq 'Access') {
                                                 $Vlan.AccessVlanId
                                             } else {
                                                 $Vlan.OperationMode
@@ -165,10 +165,34 @@
                         if ($Label) { $Label } else { [string]$Key }
                     }
                 }
+                # Values are collected language-neutral (fields separated by '|') and formatted here.
                 $FormatValue = {
-                    param ($Value, $Missing)
+                    param ($Key, $Value, $Missing)
+                    $Prefix = ([string]$Key).Split('|')[0]
+                    $Fields = ([string]$Value).Split('|')
                     if ($Missing) {
                         $LocalizedData.ValueMissing
+                    } elseif ($Prefix -eq 'Switch' -and $Fields.Count -eq 3) {
+                        # Switch type, SET enabled, number of team member adapters.
+                        $LocalizedData.ValueSwitch -f (ConvertTo-HvDisplayValue $Fields[0]), (ConvertTo-HvDisplayValue ($Fields[1] -eq 'True')), $Fields[2]
+                    } elseif ($Prefix -eq 'Vnic' -and $Fields.Count -eq 2) {
+                        $LocalizedData.ValueVnic -f (ConvertTo-HvDisplayValue $Fields[0]), $(if ($Fields[1] -eq 'Untagged') {
+                                $LocalizedData.ValueUntagged
+                            } else {
+                                ConvertTo-HvDisplayValue $Fields[1]
+                            })
+                    } elseif ($Key -eq 'TrafficClasses' -and [string]$Value -ne '') {
+                        # Name:priorities:bandwidth of every traffic class.
+                        (@(([string]$Value).Split(';') | ForEach-Object { $_.Trim() } | Where-Object { $_ } | ForEach-Object {
+                                    $Class = $_.Split(':')
+                                    if ($Class.Count -eq 3 -and $Class[2] -eq '') {
+                                        $LocalizedData.ValueTrafficClassPriority -f $Class[0], $Class[1]
+                                    } elseif ($Class.Count -eq 3) {
+                                        $LocalizedData.ValueTrafficClass -f $Class[0], $Class[1], $Class[2]
+                                    } else {
+                                        $_
+                                    }
+                                })) -join '; '
                     } elseif ($Value -eq 'True') {
                         ConvertTo-HvDisplayValue $true
                     } elseif ($Value -eq 'False') {
@@ -211,11 +235,11 @@
                                 $LocalizedData.Category = $Result.Label
                                 $LocalizedData.Setting = & $FormatKey $Deviation.Key
                                 $LocalizedData.HostName = $Deviation.Name
-                                $LocalizedData.Value = & $FormatValue -Value $Deviation.Value -Missing $Deviation.Missing
+                                $LocalizedData.Value = & $FormatValue -Key $Deviation.Key -Value $Deviation.Value -Missing $Deviation.Missing
                                 $LocalizedData.Reference = $(if (-not $Deviation.HasReference) {
                                         $LocalizedData.ValueNoMajority
                                     } else {
-                                        & $FormatValue -Value $Deviation.Reference -Missing $Deviation.ReferenceIsMissing
+                                        & $FormatValue -Key $Deviation.Key -Value $Deviation.Reference -Missing $Deviation.ReferenceIsMissing
                                     })
                             }
                         }
@@ -288,7 +312,7 @@
                                         foreach ($NodeName in $NodeNames) {
                                             $Values = $Lookup[$NodeName]
                                             $Missing = -not ($Values -and $Values.ContainsKey($Key))
-                                            $Row[$NodeName] = & $FormatValue -Value $(if (-not $Missing) { $Values[$Key] } else { $null }) -Missing $Missing
+                                            $Row[$NodeName] = & $FormatValue -Key $Key -Value $(if (-not $Missing) { $Values[$Key] } else { $null }) -Missing $Missing
                                         }
                                         $RowObj = [PSCustomObject]$Row
                                         if ($Result.Check) {

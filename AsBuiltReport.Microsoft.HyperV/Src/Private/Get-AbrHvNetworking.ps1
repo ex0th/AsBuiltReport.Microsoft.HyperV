@@ -6,7 +6,8 @@
         Documents the virtual switches including Switch Embedded Teaming (SET), the host virtual network
         adapters with VLAN, RDMA and team mapping, the physical adapters with RDMA and jumbo frames, and the
         Data Center Bridging (DCB) configuration (PFC, traffic classes, QoS policies).
-        Health checks highlight SET switches without Hyper-V port load balancing, disabled RDMA on S2D hosts,
+        Health checks highlight SET switches without Hyper-V port load balancing, SET members that are not up or
+        have different link speeds, S2D hosts without RDMA on any storage path,
         RoCE without PFC, DCBX willing mode and RDMA host vNICs without team mapping.
     .NOTES
         Version:        0.1.0
@@ -102,6 +103,7 @@
                                     InterfaceDescription = [string]$Adapter.InterfaceDescription
                                     Status = [string]$Adapter.Status
                                     LinkSpeed = [string]$Adapter.LinkSpeed
+                                    Speed = [double]$Adapter.Speed
                                     SwitchName = [string]$SwitchName
                                     RdmaCapable = [string][bool]$Rdma
                                     RdmaEnabled = $(if ($Rdma) { [string][bool]$Rdma.Enabled } else { '' })
@@ -142,28 +144,79 @@
                             $Qos.DcbxWilling = [string](Get-NetQosDcbxSetting -ErrorAction SilentlyContinue | Select-Object -First 1).Willing
                         }
 
+                        # SMB multichannel constraints pin the SMB traffic to these interfaces.
+                        $SmbConstraints = @()
+                        if (Get-Command -Name 'Get-SmbMultichannelConstraint' -ErrorAction SilentlyContinue) {
+                            $SmbConstraints = [string[]]@(Get-SmbMultichannelConstraint -ErrorAction SilentlyContinue |
+                                    ForEach-Object { @($_.InterfaceAlias) } | Where-Object { $_ } | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+                        }
+                        $VMHost = Get-VMHost -ErrorAction SilentlyContinue
+
                         [PSCustomObject]@{
                             Switches = $Switches
                             HostVnics = $HostVnics
                             Adapters = $Adapters
                             Qos = $Qos
+                            SmbConstraintInterfaces = $SmbConstraints
+                            MigrationPerformance = [string]$VMHost.VirtualMachineMigrationPerformanceOption
+                            MigrationSubnets = [string[]]@(Get-VMMigrationNetwork -ErrorAction SilentlyContinue | ForEach-Object { [string]$_.Subnet })
                         }
                     } | Sort-Object -Property NodeName)
                 $IsS2D = (@($HvEnvironment.StorageTopology) -contains 'S2D')
-                # Storage traffic between S2D nodes uses the cluster networks with the role Cluster or Cluster and client.
-                $StorageSubnets = @()
+                # Cluster networks with role and subnets; they decide which adapters carry storage and live migration traffic.
+                $NetworkClass = $null
                 if ($HvClusterSession) {
-                    $StorageSubnets = @(Invoke-Command -Session $HvClusterSession -ErrorAction SilentlyContinue -ScriptBlock {
-                            Get-ClusterNetwork -ErrorAction SilentlyContinue | Where-Object { [int]$_.Role -in 1, 3 } | ForEach-Object {
-                                $Network = $_
-                                for ($Index = 0; $Index -lt @($Network.Ipv4Addresses).Count; $Index++) {
-                                    '{0}/{1}' -f @($Network.Ipv4Addresses)[$Index], @($Network.Ipv4PrefixLengths)[$Index]
+                    $ClusterNetworkData = Invoke-Command -Session $HvClusterSession -ErrorAction SilentlyContinue -ScriptBlock {
+                        $VMResourceType = Get-ClusterResourceType -Name 'Virtual Machine' -ErrorAction SilentlyContinue
+                        $Exclude = if ($VMResourceType) {
+                            [string](Get-ClusterParameter -InputObject $VMResourceType -Name 'MigrationExcludeNetworks' -ErrorAction SilentlyContinue).Value
+                        }
+                        [PSCustomObject]@{
+                            MigrationExcludeNetworks = [string]$Exclude
+                            Networks = @(Get-ClusterNetwork -ErrorAction SilentlyContinue | ForEach-Object {
+                                    $Network = $_
+                                    [PSCustomObject]@{
+                                        Name = [string]$Network.Name
+                                        Id = [string]$Network.Id
+                                        Role = [int]$Network.Role
+                                        State = [string]$Network.State
+                                        Subnets = [string[]]@(for ($Index = 0; $Index -lt @($Network.Ipv4Addresses).Count; $Index++) {
+                                                '{0}/{1}' -f @($Network.Ipv4Addresses)[$Index], @($Network.Ipv4PrefixLengths)[$Index]
+                                            })
+                                    }
+                                })
+                        }
+                    }
+                    if ($ClusterNetworkData) {
+                        $MigrationState = Resolve-HvClusterNetwork -Network @($ClusterNetworkData.Networks) `
+                            -MigrationExcludeNetworks $ClusterNetworkData.MigrationExcludeNetworks
+                        $ClusterNetworks = @(foreach ($Network in @($ClusterNetworkData.Networks)) {
+                                $State = $MigrationState.Networks | Where-Object { $_.Id -eq ([string]$Network.Id).ToLowerInvariant() } |
+                                    Select-Object -First 1
+                                [PSCustomObject]@{
+                                    Name = $Network.Name
+                                    Role = $Network.Role
+                                    Subnets = @($Network.Subnets)
+                                    AllowedForMigration = [bool]$State.AllowedForMigration
                                 }
-                            }
-                        } | ForEach-Object { [string]$_ })
+                            })
+                        $NetworkClass = Resolve-HvStorageNetwork -ClusterNetwork $ClusterNetworks -NetworkData $NetworkData
+                    }
                 }
                 $Findings = @(foreach ($HostItem in $NetworkData) {
-                        Resolve-HvNetworkFinding -NetworkData $HostItem -IsS2D:$IsS2D -StorageSubnet $StorageSubnets | ForEach-Object {
+                        $FindingParams = @{
+                            NetworkData = $HostItem
+                            IsS2D = $IsS2D
+                        }
+                        if ($NetworkClass) {
+                            $FindingParams['StorageSubnet'] = $NetworkClass.StorageSubnets
+                            $FindingParams['ExcludeSubnet'] = $NetworkClass.ExcludedSubnets
+                            $FindingParams['MigrationSubnet'] = $NetworkClass.MigrationSubnets
+                        } else {
+                            # Standalone host: the live migration networks of the host.
+                            $FindingParams['MigrationSubnet'] = @($HostItem.MigrationSubnets)
+                        }
+                        Resolve-HvNetworkFinding @FindingParams | ForEach-Object {
                             $_ | Add-Member -MemberType NoteProperty -Name 'NodeName' -Value $HostItem.NodeName -PassThru
                         }
                     })
@@ -282,14 +335,29 @@
                         Finding = $LocalizedData.SetLoadBalancingFinding
                         Recommendation = $LocalizedData.SetLoadBalancingBP
                     }
-                    RdmaDisabled = @{
+                    SetMemberState = @{
+                        Enabled = $Healthcheck.Networking.SetMemberState
+                        Targets = @(@{ Table = $AdapterObj; KeyColumn = $LocalizedData.AdapterName; Column = $LocalizedData.Status })
+                        Finding = $LocalizedData.SetMemberStateFinding
+                        Recommendation = $LocalizedData.SetMemberStateBP
+                    }
+                    SetMemberLinkSpeed = @{
+                        Enabled = $Healthcheck.Networking.SetMemberLinkSpeed
+                        Targets = @(@{ Table = $AdapterObj; KeyColumn = $LocalizedData.AdapterName; Column = $LocalizedData.LinkSpeed })
+                        Finding = $LocalizedData.SetMemberLinkSpeedFinding
+                        Recommendation = $LocalizedData.SetMemberLinkSpeedBP
+                    }
+                    RdmaDisabledAdapter = @{
                         Enabled = $Healthcheck.Networking.RdmaState
-                        Targets = @(
-                            @{ Table = $AdapterObj; KeyColumn = $LocalizedData.AdapterName; Column = $LocalizedData.Rdma }
-                            @{ Table = $VnicObj; KeyColumn = $LocalizedData.VnicName; Column = $LocalizedData.Rdma }
-                        )
-                        Finding = $LocalizedData.RdmaStateFinding
-                        Recommendation = $LocalizedData.RdmaStateBP
+                        Targets = @(@{ Table = $AdapterObj; KeyColumn = $LocalizedData.AdapterName; Column = $LocalizedData.Rdma })
+                        Finding = $LocalizedData.RdmaDisabledAdapterFinding
+                        Recommendation = $LocalizedData.RdmaDisabledAdapterBP
+                    }
+                    RdmaDisabledVnic = @{
+                        Enabled = $Healthcheck.Networking.RdmaState
+                        Targets = @(@{ Table = $VnicObj; KeyColumn = $LocalizedData.VnicName; Column = $LocalizedData.Rdma })
+                        Finding = $LocalizedData.RdmaDisabledVnicFinding
+                        Recommendation = $LocalizedData.RdmaDisabledVnicBP
                     }
                     NoStorageRdma = @{
                         Enabled = $Healthcheck.Networking.RdmaState
@@ -331,13 +399,20 @@
                     }
                     $ShownChecks.Add($CheckName)
                     foreach ($Finding in $CheckFindings) {
+                        # Findings for a switch name the adapters to highlight in Members.
+                        $Keys = if ($Finding.PSObject.Properties['Members']) { @($Finding.Members) } else { @($Finding.Object) }
                         foreach ($Target in @($Check.Targets)) {
                             @($Target.Table) | Where-Object {
                                 $_.$($LocalizedData.HostName) -eq $Finding.NodeName -and
-                                ($Target.KeyColumn -eq '' -or $_.$($Target.KeyColumn) -eq $Finding.Object)
+                                ($Target.KeyColumn -eq '' -or $Keys -contains $_.$($Target.KeyColumn))
                             } | Set-Style -Style Warning -Property $Target.Column
                         }
                     }
+                }
+                # Live migration over SMB without RDMA is only a note, not a warning.
+                $MigrationNoRdmaHosts = @()
+                if ($Healthcheck.Networking.RdmaState) {
+                    $MigrationNoRdmaHosts = @($Findings | Where-Object { $_.Check -eq 'MigrationNoRdma' } | ForEach-Object { $_.NodeName })
                 }
                 # Writes the health check text of the given checks below the table they highlight.
                 $WriteChecks = {
@@ -399,7 +474,7 @@
                                 $TableParams['Caption'] = "- $($TableParams.Name)"
                             }
                             $VnicObj | Table @TableParams
-                            & $WriteChecks 'VnicTeamMapping'
+                            & $WriteChecks 'RdmaDisabledVnic', 'VnicTeamMapping'
                         }
                     }
 
@@ -420,7 +495,11 @@
                                 $TableParams['Caption'] = "- $($TableParams.Name)"
                             }
                             $AdapterObj | Table @TableParams
-                            & $WriteChecks 'RdmaDisabled', 'NoStorageRdma', 'RocePfc'
+                            & $WriteChecks 'SetMemberState', 'SetMemberLinkSpeed', 'RdmaDisabledAdapter', 'NoStorageRdma', 'RocePfc'
+                            if ($MigrationNoRdmaHosts.Count -gt 0) {
+                                Paragraph ($LocalizedData.MigrationNoRdmaNote -f ($MigrationNoRdmaHosts -join ', '))
+                                BlankLine
+                            }
                         }
                     }
 

@@ -157,15 +157,22 @@
                     if ($Label) { $Label } else { ConvertTo-HvDisplayValue $Key }
                 }
 
+                # With a single media type S2D claims no cache devices; the cache settings then have no effect.
+                $CacheDiskCount = @($Pools | ForEach-Object { @($_.PhysicalDisks) } | Where-Object { $_ -and $_.Usage -eq 'Journal' }).Count
+                $NoCache = ($CacheDiskCount -eq 0 -and @($Pools | ForEach-Object { @($_.PhysicalDisks) } | Where-Object { $_ }).Count -gt 0)
                 $ConfigObj = $null
                 if ($S2DData.S2D) {
                     $ConfigHash = [ordered]@{
                         $LocalizedData.S2DState = ConvertTo-HvDisplayValue $S2DData.S2D.State
-                        $LocalizedData.CacheState = ConvertTo-HvDisplayValue $S2DData.S2D.CacheState
-                        $LocalizedData.CacheModeSSD = ConvertTo-HvDisplayValue $S2DData.S2D.CacheModeSSD
-                        $LocalizedData.CacheModeHDD = ConvertTo-HvDisplayValue $S2DData.S2D.CacheModeHDD
                     }
-                    if ($InfoLevel.StorageS2D -ge 2) {
+                    if ($NoCache) {
+                        $ConfigHash[$LocalizedData.CacheState] = $LocalizedData.ValueNoCache
+                    } else {
+                        $ConfigHash[$LocalizedData.CacheState] = ConvertTo-HvDisplayValue $S2DData.S2D.CacheState
+                        $ConfigHash[$LocalizedData.CacheModeSSD] = ConvertTo-HvDisplayValue $S2DData.S2D.CacheModeSSD
+                        $ConfigHash[$LocalizedData.CacheModeHDD] = ConvertTo-HvDisplayValue $S2DData.S2D.CacheModeHDD
+                    }
+                    if ($InfoLevel.StorageS2D -ge 2 -and -not $NoCache) {
                         $ConfigHash[$LocalizedData.CachePageSize] = $(if ($S2DData.S2D.CachePageSizeKBytes) {
                                 $LocalizedData.ValueKB -f $S2DData.S2D.CachePageSizeKBytes
                             } else {
@@ -377,9 +384,9 @@
                     }
 
                     foreach ($PoolItem in $PoolItems) {
-                        Section -Style Heading3 ($LocalizedData.HeadingPool -f $PoolItem.Pool.Name) {
+                        Section -Style Heading3 $LocalizedData.HeadingPool {
                             $TableParams = @{
-                                Name = "$($LocalizedData.TablePool) - $($PoolItem.Pool.Name)"
+                                Name = "$($LocalizedData.TablePool) - $HvObjectName"
                                 List = $true
                                 ColumnWidths = 40, 60
                             }

@@ -45,6 +45,7 @@
             "NetworkState": true,
             "NetworkRedundancy": true,
             "RoleState": true,
+            "RoleDistribution": true,
             "CsvState": true,
             "CsvRedirectedAccess": true,
             "CsvFreeSpace": true,
@@ -54,7 +55,8 @@
         "LiveMigration": {
             "MigrationNetwork": true,
             "HostMigrationEnabled": true,
-            "SettingsConsistency": true
+            "SettingsConsistency": true,
+            "CredSSP": true
         },
         "Host": {
             "SchedulerType": true,
@@ -62,6 +64,8 @@
         },
         "Networking": {
             "SetLoadBalancing": true,
+            "SetMemberState": true,
+            "SetMemberLinkSpeed": true,
             "RdmaState": true,
             "RocePfc": true,
             "DcbxWilling": true,
