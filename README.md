@@ -100,29 +100,77 @@ A member of the local Administrators group on every documented host. Several Hyp
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/module-installation.svg" alt="" width="24" height="24" align="top"> Module Installation
 
-### PowerShell
-<!-- ********** Add installation for any additional PowerShell module(s) ********** -->
-```powershell
-# Install
-install-module AsBuiltReport.Microsoft.HyperV -Force
+> [!NOTE]
+> The module is not yet published to the PowerShell Gallery. Until then, install it from GitHub as described below.
 
-# Update
-update-module AsBuiltReport.Microsoft.HyperV -Force
+### Quick Start (GitHub)
+Run the following on the machine that generates the report (not on the Hyper-V hosts), in Windows PowerShell 5.1 or PowerShell 7. Nothing is installed on the documented hosts.
+
+**1. Install AsBuiltReport.Core** from the PowerShell Gallery:
+```powershell
+Install-Module -Name AsBuiltReport.Core -Scope CurrentUser
 ```
 
-### GitHub
-If you are unable to use the PowerShell Gallery, you can still install the module manually. Ensure you repeat the following steps for the [system requirements](https://github.com/AsBuiltReport/AsBuiltReport.Microsoft.HyperV#wrench-system-requirements) also.
+**2. Download the module and copy it to your user module folder:**
+```powershell
+# Windows PowerShell 5.1 on older systems may need TLS 1.2 for GitHub
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-1. Download the code package / [latest release](https://github.com/AsBuiltReport/AsBuiltReport.Microsoft.HyperV/releases/latest) zip from GitHub
-2. Extract the zip file
-3. Copy the folder `AsBuiltReport.Microsoft.HyperV` to a path that is set in `$env:PSModulePath`.
-4. Open a PowerShell terminal window and unblock the downloaded files with
+$Zip = Join-Path $env:TEMP 'AsBuiltReport.Microsoft.HyperV.zip'
+$Extract = Join-Path $env:TEMP 'AsBuiltReport.Microsoft.HyperV'
+Invoke-WebRequest -Uri 'https://github.com/ex0th/AsBuiltReport.Microsoft.HyperV/archive/refs/heads/master.zip' -OutFile $Zip
+Expand-Archive -Path $Zip -DestinationPath $Extract -Force
+
+# Windows PowerShell 5.1 and PowerShell 7 use different user module folders
+if ($PSVersionTable.PSEdition -eq 'Core') { $Edition = 'PowerShell' } else { $Edition = 'WindowsPowerShell' }
+$ModuleRoot = Join-Path ([Environment]::GetFolderPath('MyDocuments')) "$Edition\Modules"
+$Destination = Join-Path $ModuleRoot 'AsBuiltReport.Microsoft.HyperV'
+
+if (Test-Path $Destination) { Remove-Item -Path $Destination -Recurse -Force }   # replaces an older copy
+New-Item -ItemType Directory -Path $ModuleRoot -Force | Out-Null
+Copy-Item -Path (Join-Path $Extract 'AsBuiltReport.Microsoft.HyperV-master\AsBuiltReport.Microsoft.HyperV') -Destination $Destination -Recurse
+Get-ChildItem -Path $Destination -Recurse -File | Unblock-File
+```
+To use the module in both Windows PowerShell 5.1 and PowerShell 7, run step 2 in both shells.
+
+**3. Check the installation** (open a new PowerShell window first):
+```powershell
+Get-Module -Name AsBuiltReport.Microsoft.HyperV -ListAvailable
+```
+
+**4. Create a report configuration and generate the first report:**
+```powershell
+New-AsBuiltReportConfig -Report Microsoft.HyperV -FolderPath 'C:\Reports' -Filename 'HyperV'
+New-AsBuiltReport -Report Microsoft.HyperV -Target 'cluster01.example.com' -Credential (Get-Credential) `
+    -ReportConfigFilePath 'C:\Reports\HyperV.json' -Format Html -OutputFolderPath 'C:\Reports' -EnableHealthCheck
+```
+On the first run, `New-AsBuiltReport` asks for the general AsBuiltReport settings (company name, mail settings and so on). The sections Configuration and Examples below describe the report options and more commands.
+
+**Update:** repeat step 2. It replaces the existing copy. Create a new report configuration afterwards so that new settings are included.
+
+**Uninstall:** delete the `AsBuiltReport.Microsoft.HyperV` folder from the module folder used in step 2.
+
+### Manual Installation
+If the reporting machine has no internet access:
+
+1. Download the [code package](https://github.com/ex0th/AsBuiltReport.Microsoft.HyperV/archive/refs/heads/master.zip) on another machine and install `AsBuiltReport.Core` there with `Save-Module -Name AsBuiltReport.Core -Path <folder>` (this also saves its dependencies).
+2. Copy the folders to the reporting machine and extract the zip file.
+3. Copy the folder `AsBuiltReport.Microsoft.HyperV` (the inner one, containing the `.psd1` file) and the saved modules to a path listed in `$env:PSModulePath`, for example `Documents\WindowsPowerShell\Modules`. The folder name must stay `AsBuiltReport.Microsoft.HyperV`.
+4. Unblock the downloaded files:
     ```powershell
-    $path = (Get-Module -Name AsBuiltReport.Microsoft.HyperV -ListAvailable).ModuleBase; Unblock-File -Path $path\*.psd1; Unblock-File -Path $path\Src\Public\*.ps1; Unblock-File -Path $path\Src\Private\*.ps1
+    Get-ChildItem -Path "$([Environment]::GetFolderPath('MyDocuments'))\WindowsPowerShell\Modules" -Recurse -File | Unblock-File
     ```
-5. Close and reopen the PowerShell terminal window.
+5. Close and reopen the PowerShell window and continue with step 3 of the Quick Start.
 
-_Note: You are not limited to installing the module to those example paths, you can add a new entry to the environment variable PSModulePath if you want to use another path._
+### PowerShell Gallery
+Once the module is published:
+```powershell
+# Install
+Install-Module -Name AsBuiltReport.Microsoft.HyperV -Scope CurrentUser
+
+# Update
+Update-Module -Name AsBuiltReport.Microsoft.HyperV
+```
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/configuration.svg" alt="" width="24" height="24" align="top"> Configuration
 
