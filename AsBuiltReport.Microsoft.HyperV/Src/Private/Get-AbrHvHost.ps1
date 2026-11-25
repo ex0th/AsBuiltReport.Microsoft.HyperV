@@ -53,8 +53,37 @@
                         if (Get-Command -Name 'Get-VMHostAssignableDevice' -ErrorAction SilentlyContinue) {
                             $AssignableCount = @(Get-VMHostAssignableDevice -ErrorAction SilentlyContinue).Count
                         }
+                        $ComputerSystem = Get-CimInstance -ClassName 'Win32_ComputerSystem' -ErrorAction SilentlyContinue
+                        $Bios = Get-CimInstance -ClassName 'Win32_BIOS' -ErrorAction SilentlyContinue
+                        $Processors = @(Get-CimInstance -ClassName 'Win32_Processor' -ErrorAction SilentlyContinue)
+                        $MemoryModules = @(Get-CimInstance -ClassName 'Win32_PhysicalMemory' -ErrorAction SilentlyContinue)
                         [PSCustomObject]@{
-                            SchedulerType = $(if ($SchedulerEvent) { [string]$SchedulerEvent.Properties[0].Value } else { $null })
+                            Hardware = [PSCustomObject]@{
+                                Manufacturer = ([string]$ComputerSystem.Manufacturer).Trim()
+                                Model = ([string]$ComputerSystem.Model).Trim()
+                                SerialNumber = ([string]$Bios.SerialNumber).Trim()
+                                BiosVersion = ([string]$Bios.SMBIOSBIOSVersion).Trim()
+                                Processor = (@($Processors | ForEach-Object { ([string]$_.Name).Trim() } | Select-Object -Unique) -join '; ')
+                                Sockets = $Processors.Count
+                                Cores = [int](($Processors | Measure-Object -Property NumberOfCores -Sum).Sum)
+                                LogicalProcessors = [int](($Processors | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum)
+                                # Installed memory from the modules; falls back to the memory visible to Windows.
+                                Memory = $(if ($MemoryModules.Count -gt 0) {
+                                        [double](($MemoryModules | Measure-Object -Property Capacity -Sum).Sum)
+                                    } else {
+                                        [double]$ComputerSystem.TotalPhysicalMemory
+                                    })
+                            }
+                            NetAdapters = @(Get-NetAdapter -Physical -ErrorAction SilentlyContinue | Sort-Object -Property Name | ForEach-Object {
+                                    [PSCustomObject]@{
+                                        Name = [string]$_.Name
+                                        InterfaceDescription = [string]$_.InterfaceDescription
+                                        DriverVersion = [string]$_.DriverVersion
+                                        DriverDate = [string]$_.DriverDate
+                                        DriverProvider = [string]$_.DriverProvider
+                                    }
+                                })
+                            SchedulerType =$(if ($SchedulerEvent) { [string]$SchedulerEvent.Properties[0].Value } else { $null })
                             VbsStatus = $(if ($DeviceGuard) { [string]$DeviceGuard.VirtualizationBasedSecurityStatus } else { $null })
                             SecurityServicesRunning = [string[]]@($DeviceGuard.SecurityServicesRunning | ForEach-Object { [string]$_ })
                             SecureBoot = $(if ($SecureBootState) { [string]$SecureBootState.UEFISecureBootEnabled } else { $null })
@@ -111,6 +140,42 @@
                             Row = [PSCustomObject]$InObj
                         }
                     })
+                $HardwareObj = @()
+                $ProcessorObj = @()
+                $DriverObj = @()
+                if ($InfoLevel.Host -ge 2) {
+                    $HardwareObj = @(foreach ($HostItem in $HostData) {
+                            [PSCustomObject][ordered]@{
+                                $LocalizedData.HostName = $HostItem.NodeName
+                                $LocalizedData.Manufacturer = ConvertTo-HvDisplayValue $HostItem.Hardware.Manufacturer
+                                $LocalizedData.Model = ConvertTo-HvDisplayValue $HostItem.Hardware.Model
+                                $LocalizedData.SerialNumber = ConvertTo-HvDisplayValue $HostItem.Hardware.SerialNumber
+                                $LocalizedData.BiosVersion = ConvertTo-HvDisplayValue $HostItem.Hardware.BiosVersion
+                            }
+                        })
+                    $ProcessorObj = @(foreach ($HostItem in $HostData) {
+                            [PSCustomObject][ordered]@{
+                                $LocalizedData.HostName = $HostItem.NodeName
+                                $LocalizedData.Processor = ConvertTo-HvDisplayValue $HostItem.Hardware.Processor
+                                $LocalizedData.Sockets = $HostItem.Hardware.Sockets
+                                $LocalizedData.Cores = $HostItem.Hardware.Cores
+                                $LocalizedData.LogicalProcessors = $HostItem.Hardware.LogicalProcessors
+                                $LocalizedData.Memory = ConvertTo-HvSize $HostItem.Hardware.Memory
+                            }
+                        })
+                    $DriverObj = @(foreach ($HostItem in $HostData) {
+                            foreach ($Adapter in @($HostItem.NetAdapters | Where-Object { $_ })) {
+                                [PSCustomObject][ordered]@{
+                                    $LocalizedData.HostName = $HostItem.NodeName
+                                    $LocalizedData.AdapterName = $Adapter.Name
+                                    $LocalizedData.Description = ConvertTo-HvDisplayValue $Adapter.InterfaceDescription
+                                    $LocalizedData.DriverVersion = ConvertTo-HvDisplayValue $Adapter.DriverVersion
+                                    $LocalizedData.DriverDate = ConvertTo-HvDisplayValue $Adapter.DriverDate
+                                    $LocalizedData.DriverProvider = ConvertTo-HvDisplayValue $Adapter.DriverProvider
+                                }
+                            }
+                        })
+                }
                 #endregion Objects
 
                 #region Health checks
@@ -170,6 +235,48 @@
                         if ($ShowSecureBootCheck) {
                             Paragraph ($LocalizedData.SecureBootBP -f ($SecureBootHosts -join ', '))
                             BlankLine
+                        }
+                    }
+
+                    if ($HardwareObj.Count -gt 0) {
+                        Section -Style Heading3 $LocalizedData.HeadingHardware {
+                            Paragraph $LocalizedData.ParagraphHardware
+                            BlankLine
+                            $TableParams = @{
+                                Name = "$($LocalizedData.TableHardware) - $HvObjectName"
+                                List = $false
+                                ColumnWidths = 20, 20, 20, 20, 20
+                            }
+                            if ($Report.ShowTableCaptions) {
+                                $TableParams['Caption'] = "- $($TableParams.Name)"
+                            }
+                            $HardwareObj | Table @TableParams
+                            BlankLine
+                            $TableParams = @{
+                                Name = "$($LocalizedData.TableProcessors) - $HvObjectName"
+                                List = $false
+                                ColumnWidths = 18, 34, 10, 10, 14, 14
+                            }
+                            if ($Report.ShowTableCaptions) {
+                                $TableParams['Caption'] = "- $($TableParams.Name)"
+                            }
+                            $ProcessorObj | Table @TableParams
+                        }
+                    }
+
+                    if ($DriverObj.Count -gt 0) {
+                        Section -Style Heading3 $LocalizedData.HeadingDrivers {
+                            Paragraph $LocalizedData.ParagraphDrivers
+                            BlankLine
+                            $TableParams = @{
+                                Name = "$($LocalizedData.TableDrivers) - $HvObjectName"
+                                List = $false
+                                ColumnWidths = 16, 16, 28, 14, 12, 14
+                            }
+                            if ($Report.ShowTableCaptions) {
+                                $TableParams['Caption'] = "- $($TableParams.Name)"
+                            }
+                            $DriverObj | Table @TableParams
                         }
                     }
                 }
