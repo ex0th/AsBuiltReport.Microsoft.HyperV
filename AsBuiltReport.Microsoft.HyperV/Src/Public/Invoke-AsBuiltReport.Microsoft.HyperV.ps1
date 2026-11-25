@@ -174,6 +174,9 @@
                 # Shared block storage: iSCSI, Fibre Channel, MPIO, cluster disks (only for these topologies)
                 Get-AbrHvStorage3Tier
 
+                # Node-to-node comparison (clusters with two or more reachable nodes)
+                Get-AbrHvConsistency
+
                 # Planned sections (see README roadmap):
                 # Storage by topology: S2D pool/virtual disks/cache/fault domains, iSCSI/FC/MPIO, SMB shares
                 # Consistency: node-to-node comparison as health checks

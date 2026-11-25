@@ -241,6 +241,7 @@ The table below outlines the default and maximum InfoLevel settings for each sec
 | Networking    |        1        |        2        |
 | StorageS2D    |        1        |        2        |
 | Storage3Tier  |        1        |        2        |
+| Consistency   |        1        |        2        |
 
 ### Healthcheck
 The **Healthcheck** schema is used to toggle health checks on or off.
@@ -281,6 +282,13 @@ The **Healthcheck** schema is used to toggle health checks on or off.
 | Storage3Tier.PathRedundancy     | true / false | true    | Highlights shared disks with fewer than two paths and hosts with shared disks but without Multipath I/O | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Storage3Tier.IscsiSession       | true / false | true    | Highlights iSCSI sessions that are not connected (critical) or not persistent (warning) | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Storage3Tier.ClusterDiskState   | true / false | true    | Highlights cluster disks that failed (critical) or are not online (warning)  | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Consistency.OperatingSystem     | true / false | true    | Highlights nodes whose edition, build or installation type differs           | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Consistency.Hotfix              | true / false | true    | Highlights nodes on which hotfixes of the other nodes are missing            | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Consistency.Hardware            | true / false | true    | Highlights nodes whose manufacturer, model, BIOS, processor or memory differs | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Consistency.HyperVSettings      | true / false | true    | Highlights nodes whose default paths, NUMA spanning, enhanced session mode or default VM version differs | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Consistency.Network             | true / false | true    | Highlights nodes whose virtual switches, host vNICs, NIC drivers, jumbo frames, RDMA or DCB differ | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Consistency.Storage             | true / false | true    | Highlights nodes whose MPIO settings, disk firmware or iSCSI targets differ  | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Consistency.Features            | true / false | true    | Highlights nodes on which roles or features of the other nodes are missing   | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/examples.svg" alt="" width="24" height="24" align="top"> Examples
 <!-- ********** Add some examples. Use other AsBuiltReport modules as a guide. ********** -->
@@ -307,6 +315,5 @@ The report follows the PScribo conventions used across AsBuiltReport modules, so
 | Area | Planned content |
 |---|---|
 | Storage: SMB | SMB shares used by Hyper-V, SMB Multichannel and SMB Direct |
-| Consistency | Node-to-node comparison (patch level, virtual switches, networks) as health checks |
 | Virtual machines | Optional VM inventory (InfoLevel 0 by default) |
 

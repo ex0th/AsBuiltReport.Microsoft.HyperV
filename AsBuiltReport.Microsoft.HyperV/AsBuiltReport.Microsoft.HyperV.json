@@ -26,7 +26,8 @@
         "Host": 1,
         "Networking": 1,
         "StorageS2D": 1,
-        "Storage3Tier": 1
+        "Storage3Tier": 1,
+        "Consistency": 1
     },
     "HealthCheck": {
         "Environment": {
@@ -76,6 +77,15 @@
             "PathRedundancy": true,
             "IscsiSession": true,
             "ClusterDiskState": true
+        },
+        "Consistency": {
+            "OperatingSystem": true,
+            "Hotfix": true,
+            "Hardware": true,
+            "HyperVSettings": true,
+            "Network": true,
+            "Storage": true,
+            "Features": true
         }
     }
 }

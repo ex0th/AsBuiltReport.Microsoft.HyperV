@@ -178,6 +178,27 @@ Describe 'Localization data' {
         }
     }
 
+    It 'provides display strings for every consistency category, setting and key prefix' {
+        $Section = $script:Template['GetAbrHvConsistency']
+        $Text = Get-Content -Path (Join-Path $script:ModuleFolder 'Src\Private\Get-AbrHvConsistency.ps1') -Raw
+        $Categories = @([regex]::Matches($Text, "Name = '(?<name>\w+)'; Check = ") | ForEach-Object { $_.Groups['name'].Value })
+        $Categories.Count | Should -BeGreaterThan 0
+        foreach ($Category in $Categories) {
+            $Section.ContainsKey("Category$Category") | Should -BeTrue -Because "Category$Category is rendered for that category"
+        }
+        # Settings with a fixed key and prefixes of keys like 'Switch|<name>'.
+        $Settings = @([regex]::Matches($Text, "& \`$NewItem '(?<key>\w+)' ") | ForEach-Object { $_.Groups['key'].Value }) | Sort-Object -Unique
+        $Settings.Count | Should -BeGreaterThan 0
+        foreach ($Setting in $Settings) {
+            $Section.ContainsKey("Setting$Setting") | Should -BeTrue -Because "Setting$Setting is rendered for that setting"
+        }
+        $Prefixes = @([regex]::Matches($Text, '& \$NewItem "(?<prefix>\w+)\|') | ForEach-Object { $_.Groups['prefix'].Value }) | Sort-Object -Unique
+        $Prefixes.Count | Should -BeGreaterThan 0
+        foreach ($Prefix in $Prefixes) {
+            $Section.ContainsKey("Prefix$Prefix") | Should -BeTrue -Because "Prefix$Prefix is rendered for that key prefix"
+        }
+    }
+
     # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
     # -AllowNullOrEmptyForEach switch.
     if ($script:LanguageFolders.Count -gt 0) {

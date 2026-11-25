@@ -1411,6 +1411,106 @@ function Get-HvReportCulture {
     Get-Culture
 }
 
+function Resolve-HvKeyedDeviation {
+    <#
+    .SYNOPSIS
+        Compares keyed values between hosts, for example hotfixes, features or settings.
+    .DESCRIPTION
+        Pure function for node-to-node consistency checks. Every input object has a Name (host) and Items, a
+        list of Key/Value pairs. A key that a host does not have counts as missing.
+
+        For every key, the value most hosts share is the reference; hosts with another value or without the
+        key are deviations. If no single value is the most common, every host is reported with an empty
+        reference. With PreferPresent, the reference is taken from the hosts that have the key, so a hotfix
+        or feature that is missing on some hosts is reported for those hosts, even in a two-node cluster.
+
+        Returns Name, Key, Value, Missing and Reference for every deviation. Keys keep the order in which
+        they first appear.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [Object[]] $InputObject,
+
+        [Switch] $PreferPresent
+    )
+
+    $Hosts = @($InputObject | Where-Object { $_ })
+    if ($Hosts.Count -lt 2) {
+        return
+    }
+
+    $Keys = New-Object -TypeName System.Collections.Generic.List[String]
+    $Lookup = @{}
+    foreach ($HostItem in $Hosts) {
+        $Values = @{}
+        foreach ($Item in @($HostItem.Items | Where-Object { $_ })) {
+            $Key = [string]$Item.Key
+            if (-not $Keys.Contains($Key)) {
+                $Keys.Add($Key)
+            }
+            $Values[$Key] = [string]$Item.Value
+        }
+        $Lookup[[string]$HostItem.Name] = $Values
+    }
+
+    foreach ($Key in $Keys) {
+        $Entries = foreach ($HostItem in $Hosts) {
+            $Values = $Lookup[[string]$HostItem.Name]
+            $Present = $Values.ContainsKey($Key)
+            [PSCustomObject]@{
+                Name = [string]$HostItem.Name
+                Missing = (-not $Present)
+                Value = $(if ($Present) { $Values[$Key] } else { $null })
+            }
+        }
+        $Entries = @($Entries)
+        $Distinct = @($Entries | ForEach-Object { if ($_.Missing) { 'm' } else { "v:$($_.Value)" } } | Select-Object -Unique)
+        if ($Distinct.Count -lt 2) {
+            continue
+        }
+
+        $Candidates = if ($PreferPresent) { @($Entries | Where-Object { -not $_.Missing }) } else { $Entries }
+        $Groups = @($Candidates | Group-Object -Property { if ($_.Missing) { 'm' } else { "v:$($_.Value)" } } |
+                Sort-Object -Property Count -Descending)
+        $Reference = $null
+        $ReferenceIsMissing = $false
+        if ($Groups.Count -eq 1 -or ($Groups.Count -gt 1 -and $Groups[0].Count -gt $Groups[1].Count)) {
+            $Winner = $Groups[0].Group[0]
+            $ReferenceIsMissing = $Winner.Missing
+            $Reference = $Winner.Value
+        }
+        $HasReference = ($Groups.Count -eq 1 -or ($Groups.Count -gt 1 -and $Groups[0].Count -gt $Groups[1].Count))
+
+        foreach ($Entry in $Entries) {
+            $IsDeviation = if (-not $HasReference) {
+                $true
+            } elseif ($ReferenceIsMissing) {
+                -not $Entry.Missing
+            } else {
+                $Entry.Missing -or $Entry.Value -ne $Reference
+            }
+            if ($IsDeviation) {
+                [PSCustomObject]@{
+                    Name = $Entry.Name
+                    Key = $Key
+                    Value = $Entry.Value
+                    Missing = $Entry.Missing
+                    Reference = $Reference
+                    ReferenceIsMissing = ($HasReference -and $ReferenceIsMissing)
+                    HasReference = $HasReference
+                }
+            }
+        }
+    }
+}
+
 function ConvertTo-HvSize {
     <#
     .SYNOPSIS

@@ -662,4 +662,65 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ClusterDiskStateBP = The following cluster disks are not online: {0}. Check the storage connectivity and the cluster events.
 '@
 
+    # Get-AbrHvConsistency
+    GetAbrHvConsistency = ConvertFrom-StringData @'
+    InfoLevel = Consistency InfoLevel set at {0}.
+    Collecting = Comparing the node configuration of {0}.
+    HostFailed = Unable to collect the configuration of '{0}' for the comparison: {1}
+    Heading = Node Consistency
+    ParagraphSummary = The following table compares the configuration of the nodes of {0} ({1}). The value most nodes use is the reference; every other value is a deviation.
+    TableSummary = Node Consistency
+    Category = Category
+    ComparedItems = Compared Items
+    DeviationCount = Deviations
+    HeadingDeviations = Deviations
+    NoDeviations = The compared configuration is the same on all nodes.
+    ParagraphDeviations = The following table lists the settings that differ between the nodes.
+    TableDeviations = Node Deviations
+    HeadingMatrix = Comparison: {0}
+    TableMatrix = Node Comparison
+    Setting = Setting
+    HostName = Node
+    Value = Value
+    Reference = Most Nodes
+    ValueMissing = Not present
+    ValueInstalled = Installed
+    ValueNoMajority = No majority
+    CategoryOperatingSystem = Operating system
+    CategoryHotfix = Hotfixes
+    CategoryHardware = Hardware
+    CategoryHyperVSettings = Hyper-V settings
+    CategoryNetwork = Networking
+    CategoryStorage = Storage
+    CategoryFeatures = Roles and features
+    SettingEdition = Edition
+    SettingBuild = Build
+    SettingInstallationType = Installation Type
+    SettingDisplayVersion = Version
+    SettingManufacturer = Manufacturer
+    SettingModel = Model
+    SettingBiosVersion = BIOS Version
+    SettingProcessor = Processor
+    SettingLogicalProcessors = Logical Processors
+    SettingMemory = Memory
+    SettingVirtualMachinePath = Default Virtual Machine Path
+    SettingVirtualHardDiskPath = Default Virtual Hard Disk Path
+    SettingNumaSpanning = NUMA Spanning
+    SettingEnhancedSessionMode = Enhanced Session Mode
+    SettingDefaultVmVersion = Default VM Version
+    SettingPfcPriorities = PFC Priorities
+    SettingTrafficClasses = Traffic Classes
+    SettingMpioInstalled = MPIO Installed
+    SettingLoadBalancePolicy = MPIO Load Balance Policy
+    PrefixSwitch = Virtual switch
+    PrefixVnic = Host vNIC
+    PrefixDriver = Driver
+    PrefixJumbo = Jumbo packet
+    PrefixRdma = RDMA
+    PrefixFirmware = Disk firmware
+    PrefixIscsiTarget = iSCSI target
+    HealthCheck = Health Check:
+    ConsistencyBP = The configuration differs between the nodes in the following categories: {0}. Nodes of a cluster should use the same updates, drivers, firmware and settings, so that roles behave the same on every node after a failover or live migration.
+'@
+
 }

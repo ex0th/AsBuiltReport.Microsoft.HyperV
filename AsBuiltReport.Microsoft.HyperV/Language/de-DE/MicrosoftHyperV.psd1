@@ -663,4 +663,65 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ClusterDiskStateBP = Die folgenden Clusterdatenträger sind nicht online: {0}. Prüfen Sie die Speicheranbindung und die Clusterereignisse.
 '@
 
+    # Get-AbrHvConsistency
+    GetAbrHvConsistency = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für Consistency ist auf {0} gesetzt.
+    Collecting = Die Konfiguration der Knoten von {0} wird verglichen.
+    HostFailed = Die Konfiguration von '{0}' konnte für den Vergleich nicht gesammelt werden: {1}
+    Heading = Konsistenz der Knoten
+    ParagraphSummary = Die folgende Tabelle vergleicht die Konfiguration der Knoten von {0} ({1}). Der Wert, den die meisten Knoten verwenden, ist der Referenzwert; jeder andere Wert ist eine Abweichung.
+    TableSummary = Konsistenz der Knoten
+    Category = Kategorie
+    ComparedItems = Verglichene Elemente
+    DeviationCount = Abweichungen
+    HeadingDeviations = Abweichungen
+    NoDeviations = Die verglichene Konfiguration ist auf allen Knoten gleich.
+    ParagraphDeviations = Die folgende Tabelle listet die Einstellungen auf, die sich zwischen den Knoten unterscheiden.
+    TableDeviations = Abweichungen zwischen Knoten
+    HeadingMatrix = Vergleich: {0}
+    TableMatrix = Knotenvergleich
+    Setting = Einstellung
+    HostName = Knoten
+    Value = Wert
+    Reference = Die meisten Knoten
+    ValueMissing = Nicht vorhanden
+    ValueInstalled = Installiert
+    ValueNoMajority = Keine Mehrheit
+    CategoryOperatingSystem = Betriebssystem
+    CategoryHotfix = Hotfixes
+    CategoryHardware = Hardware
+    CategoryHyperVSettings = Hyper-V-Einstellungen
+    CategoryNetwork = Netzwerk
+    CategoryStorage = Speicher
+    CategoryFeatures = Rollen und Features
+    SettingEdition = Edition
+    SettingBuild = Build
+    SettingInstallationType = Installationstyp
+    SettingDisplayVersion = Version
+    SettingManufacturer = Hersteller
+    SettingModel = Modell
+    SettingBiosVersion = BIOS-Version
+    SettingProcessor = Prozessor
+    SettingLogicalProcessors = Logische Prozessoren
+    SettingMemory = Arbeitsspeicher
+    SettingVirtualMachinePath = Standardpfad für virtuelle Computer
+    SettingVirtualHardDiskPath = Standardpfad für virtuelle Festplatten
+    SettingNumaSpanning = NUMA-Übergreifung
+    SettingEnhancedSessionMode = Erweiterter Sitzungsmodus
+    SettingDefaultVmVersion = Standard-VM-Version
+    SettingPfcPriorities = PFC-Prioritäten
+    SettingTrafficClasses = Datenverkehrsklassen
+    SettingMpioInstalled = MPIO installiert
+    SettingLoadBalancePolicy = MPIO-Lastenausgleichsrichtlinie
+    PrefixSwitch = Virtueller Switch
+    PrefixVnic = Host-vNIC
+    PrefixDriver = Treiber
+    PrefixJumbo = Jumbopaket
+    PrefixRdma = RDMA
+    PrefixFirmware = Datenträgerfirmware
+    PrefixIscsiTarget = iSCSI-Ziel
+    HealthCheck = Integritätsprüfung:
+    ConsistencyBP = Die Konfiguration unterscheidet sich zwischen den Knoten in den folgenden Kategorien: {0}. Die Knoten eines Clusters sollten dieselben Updates, Treiber, Firmware und Einstellungen verwenden, damit sich Rollen nach einem Failover oder einer Livemigration auf jedem Knoten gleich verhalten.
+'@
+
 }
