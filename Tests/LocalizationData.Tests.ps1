@@ -163,6 +163,13 @@ Describe 'Localization data' {
         }
     }
 
+    It 'provides display strings for every resiliency' {
+        $Section = $script:Template['GetAbrHvStorageS2D']
+        foreach ($Key in 'Simple', 'TwoWayMirror', 'ThreeWayMirror', 'NestedTwoWayMirror', 'SingleParity', 'DualParity', 'NestedParity') {
+            $Section.ContainsKey("Resiliency$Key") | Should -BeTrue -Because "Resiliency$Key is rendered for that resiliency"
+        }
+    }
+
     # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
     # -AllowNullOrEmptyForEach switch.
     if ($script:LanguageFolders.Count -gt 0) {

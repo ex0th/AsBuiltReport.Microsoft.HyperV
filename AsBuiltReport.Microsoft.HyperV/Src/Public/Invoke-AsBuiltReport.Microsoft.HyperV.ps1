@@ -169,6 +169,9 @@
                 # Virtual switches (SET), host vNICs, physical adapters, RDMA and DCB
                 Get-AbrHvNetworking
 
+                # Storage Spaces Direct (only when S2D was detected)
+                Get-AbrHvStorageS2D
+
                 # Planned sections (see README roadmap):
                 # Storage by topology: S2D pool/virtual disks/cache/fault domains, iSCSI/FC/MPIO, SMB shares
                 # Consistency: node-to-node comparison as health checks

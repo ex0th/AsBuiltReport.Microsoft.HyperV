@@ -959,6 +959,154 @@ function Resolve-HvNetworkFinding {
     }
 }
 
+function ConvertTo-HvHealthSeverity {
+    <#
+    .SYNOPSIS
+        Maps a storage health status to a severity.
+    .DESCRIPTION
+        Pure function. Healthy = Ok, Unhealthy = Critical, every other value (Warning, Unknown) = Warning.
+        Integer values of the Storage module (0 Healthy, 1 Warning, 2 Unhealthy) are accepted as well.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(Position = 0)]
+        [AllowNull()]
+        [Object] $HealthStatus
+    )
+
+    switch ([string]$HealthStatus) {
+        { $_ -in 'Healthy', '0' } { return 'Ok' }
+        { $_ -in 'Unhealthy', '2' } { return 'Critical' }
+        default { return 'Warning' }
+    }
+}
+
+function ConvertTo-HvFaultSeverity {
+    <#
+    .SYNOPSIS
+        Maps the perceived severity of a health fault (Get-HealthFault) to a severity.
+    .DESCRIPTION
+        Pure function. Major, critical and fatal faults are Critical, minor faults and degraded or warning
+        states are Warning, information is Ok. Accepts the text and the numeric CIM values.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(Position = 0)]
+        [AllowNull()]
+        [Object] $PerceivedSeverity
+    )
+
+    $Value = [string]$PerceivedSeverity
+    if ($Value -match '^(5|6|7)$' -or $Value -match 'Major|Critical|Fatal|Non-recoverable') {
+        return 'Critical'
+    }
+    if ($Value -match '^2$' -or $Value -match '^Information') {
+        return 'Ok'
+    }
+    'Warning'
+}
+
+function Resolve-HvResiliency {
+    <#
+    .SYNOPSIS
+        Returns a key for the resiliency of a Storage Spaces virtual disk or storage tier.
+    .DESCRIPTION
+        Pure function. Keys: Simple, TwoWayMirror, ThreeWayMirror, NestedTwoWayMirror, SingleParity,
+        DualParity, NestedParity, or the raw resiliency setting name.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [AllowNull()]
+        [AllowEmptyString()]
+        [String] $ResiliencySettingName,
+
+        [AllowNull()]
+        [Object] $NumberOfDataCopies,
+
+        [AllowNull()]
+        [Object] $PhysicalDiskRedundancy
+    )
+
+    $Copies = [string]$NumberOfDataCopies
+    $Redundancy = [string]$PhysicalDiskRedundancy
+    switch ($ResiliencySettingName) {
+        'Simple' { return 'Simple' }
+        'Mirror' {
+            if ($Copies -eq '4') { return 'NestedTwoWayMirror' }
+            if ($Copies -eq '3' -or $Redundancy -eq '2') { return 'ThreeWayMirror' }
+            return 'TwoWayMirror'
+        }
+        'Parity' {
+            if ($Copies -eq '2') { return 'NestedParity' }
+            if ($Redundancy -eq '2') { return 'DualParity' }
+            return 'SingleParity'
+        }
+        default { return [string]$ResiliencySettingName }
+    }
+}
+
+function Resolve-HvS2DReserve {
+    <#
+    .SYNOPSIS
+        Calculates the recommended reserve capacity of a Storage Spaces Direct pool.
+    .DESCRIPTION
+        Pure function. Microsoft recommends keeping the capacity of one capacity drive per node unallocated,
+        up to four drives, so that the pool can repair in place after a drive failure. Cache drives (usage
+        Journal) do not add capacity and are ignored.
+
+        Returns FreeBytes, ReserveBytes, ReserveMet and the allocated percentage.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [Double] $PoolSize,
+
+        [Parameter(Mandatory)]
+        [Double] $AllocatedSize,
+
+        # Pool disks: Size, Usage
+        [AllowEmptyCollection()]
+        [Object[]] $PhysicalDisk = @(),
+
+        [Int] $NodeCount = 1
+    )
+
+    $CapacityDisks = @($PhysicalDisk | Where-Object { $_ -and [string]$_.Usage -ne 'Journal' -and [string]$_.Usage -ne 'Retired' })
+    $LargestDisk = 0
+    if ($CapacityDisks.Count -gt 0) {
+        $LargestDisk = [double](($CapacityDisks | Measure-Object -Property Size -Maximum).Maximum)
+    }
+    $ReserveBytes = [math]::Min([math]::Max($NodeCount, 1), 4) * $LargestDisk
+    $FreeBytes = [math]::Max($PoolSize - $AllocatedSize, 0)
+
+    [PSCustomObject]@{
+        FreeBytes = $FreeBytes
+        ReserveBytes = $ReserveBytes
+        ReserveMet = ($FreeBytes -ge $ReserveBytes)
+        AllocatedPercent = $(if ($PoolSize -gt 0) { $AllocatedSize / $PoolSize * 100 } else { $null })
+    }
+}
+
 function Resolve-HvClusterGroup {
     <#
     .SYNOPSIS

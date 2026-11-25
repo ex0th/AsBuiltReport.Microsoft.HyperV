@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health checks for hosts with the classic hypervisor scheduler and SMT and for hosts with Secure Boot disabled
 - `Virtual Networking` section with virtual switches including Switch Embedded Teaming, host vNICs with VLAN, RDMA and team mapping, physical adapters with RDMA and jumbo frames, and Data Center Bridging (PFC, traffic classes, QoS policies); new `InfoLevel.Networking`
 - Health checks for SET switches without Hyper-V port load balancing, disabled RDMA on Storage Spaces Direct hosts, RoCE without PFC, DCBX willing mode and RDMA host vNICs without team mapping
+- `Storage Spaces Direct` section with S2D configuration and cache, storage pool with capacity and recommended reserve, physical disks per node, virtual disks with resiliency and tiers, fault domains, storage jobs and Health Service faults; new `InfoLevel.StorageS2D`
+- Health checks for unhealthy storage pools, physical disks and virtual disks, a pool reserve below one capacity drive per node, running storage jobs and Health Service faults
 - Health checks for failed or partially online roles, Cluster Shared Volumes that are not online, use redirected I/O (ReFS is expected and ignored) or run out of free space, a missing or offline CAU self-updating role and a failed last CAU run
 - Detection evidence for the Hyper-V role per host, physical disk resources, Cluster Shared Volumes, Scale-Out File Server roles and SMB shares that hold virtual hard disks
 - Readable values for the cluster functional level and the auto balancer mode and level

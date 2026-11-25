@@ -239,6 +239,7 @@ The table below outlines the default and maximum InfoLevel settings for each sec
 | LiveMigration |        1        |        2        |
 | Host          |        1        |        2        |
 | Networking    |        1        |        2        |
+| StorageS2D    |        1        |        2        |
 
 ### Healthcheck
 The **Healthcheck** schema is used to toggle health checks on or off.
@@ -270,6 +271,12 @@ The **Healthcheck** schema is used to toggle health checks on or off.
 | Networking.RocePfc              | true / false | true    | Highlights RoCE adapters without priority flow control or with DCB disabled  | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Networking.DcbxWilling          | true / false | true    | Highlights hosts with PFC that accept DCB settings from the switch (DCBX willing) | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Networking.VnicTeamMapping      | true / false | true    | Highlights RDMA host vNICs on multi-member SET switches without team mapping | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| StorageS2D.PoolHealth           | true / false | true    | Highlights storage pools that are not healthy                                | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| StorageS2D.ReserveCapacity      | true / false | true    | Highlights pools with less unallocated capacity than one capacity drive per node (up to four) | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| StorageS2D.PhysicalDiskHealth   | true / false | true    | Highlights physical disks that are not healthy or retired                    | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| StorageS2D.VirtualDiskHealth    | true / false | true    | Highlights virtual disks that are not healthy                                | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| StorageS2D.StorageJobs          | true / false | true    | Highlights running storage jobs (repair, rebalance)                          | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| StorageS2D.HealthFaults         | true / false | true    | Highlights current faults of the cluster Health Service                      | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/examples.svg" alt="" width="24" height="24" align="top"> Examples
 <!-- ********** Add some examples. Use other AsBuiltReport modules as a guide. ********** -->
@@ -295,7 +302,6 @@ The report follows the PScribo conventions used across AsBuiltReport modules, so
 
 | Area | Planned content |
 |---|---|
-| Storage: S2D / Azure Local | Storage pool, physical disks and cache, virtual disks with resiliency and tiers, fault domains |
 | Storage: 3-tier | iSCSI targets and sessions, Fibre Channel ports, MPIO policies, CSV and cluster disks |
 | Storage: SMB | SMB shares used by Hyper-V, SMB Multichannel and SMB Direct |
 | Consistency | Node-to-node comparison (patch level, virtual switches, networks) as health checks |
