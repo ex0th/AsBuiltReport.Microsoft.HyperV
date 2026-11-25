@@ -1107,6 +1107,83 @@ function Resolve-HvS2DReserve {
     }
 }
 
+function Resolve-HvStoragePath {
+    <#
+    .SYNOPSIS
+        Evaluates the path redundancy and the iSCSI sessions of shared block storage on one host.
+    .DESCRIPTION
+        Pure function without remote calls. Input properties of StorageData:
+        MpioInstalled, Disks (Number, FriendlyName, BusType, Paths), IscsiSessions (TargetNodeAddress,
+        IsConnected, IsPersistent).
+
+        Paths is the number of MPIO paths of a disk; an empty value means the disk is not claimed by MPIO
+        and has a single path.
+
+        Returns one object per finding with Check, Object and Severity:
+        MpioMissing        shared disks exist but the Multipath I/O feature is not installed (Warning)
+        SinglePath         shared disk with fewer than two paths (Warning)
+        IscsiNotConnected  iSCSI session that is not connected (Critical)
+        IscsiNotPersistent iSCSI session that is not restored after a restart (Warning)
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [Object] $StorageData
+    )
+
+    $Disks = @($StorageData.Disks | Where-Object { $_ })
+    if ($Disks.Count -gt 0 -and [string]$StorageData.MpioInstalled -ne 'True') {
+        [PSCustomObject]@{ Check = 'MpioMissing'; Object = ''; Severity = 'Warning' }
+    }
+    foreach ($Disk in $Disks) {
+        $Paths = 1
+        if ($null -ne $Disk.Paths -and [string]$Disk.Paths -ne '') {
+            $Paths = [int]$Disk.Paths
+        }
+        if ($Paths -lt 2) {
+            $Name = if ($Disk.FriendlyName) { '{0} ({1})' -f $Disk.Number, $Disk.FriendlyName } else { [string]$Disk.Number }
+            [PSCustomObject]@{ Check = 'SinglePath'; Object = $Name; Severity = 'Warning' }
+        }
+    }
+
+    foreach ($Session in @($StorageData.IscsiSessions | Where-Object { $_ })) {
+        if ([string]$Session.IsConnected -ne 'True') {
+            [PSCustomObject]@{ Check = 'IscsiNotConnected'; Object = [string]$Session.TargetNodeAddress; Severity = 'Critical' }
+        } elseif ([string]$Session.IsPersistent -ne 'True') {
+            [PSCustomObject]@{ Check = 'IscsiNotPersistent'; Object = [string]$Session.TargetNodeAddress; Severity = 'Warning' }
+        }
+    }
+}
+
+function ConvertTo-HvResourceSeverity {
+    <#
+    .SYNOPSIS
+        Maps the state of a cluster resource to a severity: Online = Ok, Failed = Critical, other = Warning.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(Position = 0)]
+        [AllowNull()]
+        [Object] $State
+    )
+
+    switch ([string]$State) {
+        'Online' { return 'Ok' }
+        'Failed' { return 'Critical' }
+        default { return 'Warning' }
+    }
+}
+
 function Resolve-HvClusterGroup {
     <#
     .SYNOPSIS

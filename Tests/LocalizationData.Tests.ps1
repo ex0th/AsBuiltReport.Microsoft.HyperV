@@ -170,6 +170,14 @@ Describe 'Localization data' {
         }
     }
 
+    It 'provides display strings for the MPIO load balance policies' {
+        $Section = $script:Template['GetAbrHvStorage3Tier']
+        # Other policies show the raw value.
+        foreach ($Key in 'None', 'FOO', 'RR', 'LQD', 'LB') {
+            $Section.ContainsKey("Policy$Key") | Should -BeTrue -Because "Policy$Key is rendered for that policy"
+        }
+    }
+
     # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
     # -AllowNullOrEmptyForEach switch.
     if ($script:LanguageFolders.Count -gt 0) {

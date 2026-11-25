@@ -171,6 +171,8 @@
 
                 # Storage Spaces Direct (only when S2D was detected)
                 Get-AbrHvStorageS2D
+                # Shared block storage: iSCSI, Fibre Channel, MPIO, cluster disks (only for these topologies)
+                Get-AbrHvStorage3Tier
 
                 # Planned sections (see README roadmap):
                 # Storage by topology: S2D pool/virtual disks/cache/fault domains, iSCSI/FC/MPIO, SMB shares
