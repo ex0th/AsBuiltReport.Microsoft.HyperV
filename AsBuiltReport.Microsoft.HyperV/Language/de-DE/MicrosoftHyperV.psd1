@@ -205,6 +205,8 @@ GetAbrHvClusterQuorum = ConvertFrom-StringData @'
     NoWitnessBP = Es ist kein Quorumzeuge konfiguriert. Microsoft empfiehlt für jeden Cluster einen Zeugen, da der dynamische Zeuge die Gesamtzahl der Stimmen ungerade hält. Konfigurieren Sie einen Cloud-, Dateifreigabe- oder Datenträgerzeugen.
     WitnessStateBP = Die Zeugenressource '{0}' hat den Status {1}. Solange der Zeuge nicht online ist, zählt seine Stimme nicht, und der Cluster toleriert weniger Ausfälle.
     DynamicQuorumBP = Das dynamische Quorum ist deaktiviert. Mit dynamischem Quorum passt der Cluster die Stimmen bei Knotenausfällen an und übersteht den aufeinanderfolgenden Ausfall aller Knoten bis auf einen. Aktivieren Sie das dynamische Quorum, sofern es keinen bestimmten Grund dagegen gibt.
+    WitnessLocationBP = Der Dateifreigabenzeuge {0} liegt auf dem virtuellen Computer {1}, der auf diesem Cluster läuft. Verliert der Cluster Knoten, kann der Zeuge mit ihnen ausfallen und die entscheidende Stimme nicht liefern. Platzieren Sie den Zeugen außerhalb des Clusters, zum Beispiel auf einem anderen Server oder als Cloudzeugen.
+    WitnessVmFailed = Die virtuellen Computer von '{0}' konnten für die Zeugenprüfung nicht gelesen werden: {1}
 '@
 
 # Get-AbrHvClusterNetwork

@@ -204,6 +204,8 @@ GetAbrHvClusterQuorum = ConvertFrom-StringData @'
     NoWitnessBP = No quorum witness is configured. Microsoft recommends a witness for every cluster, because dynamic witness keeps the total number of votes odd. Configure a cloud, file share or disk witness.
     WitnessStateBP = The witness resource '{0}' is in the state {1}. While the witness is not online, its vote does not count and the cluster tolerates fewer failures.
     DynamicQuorumBP = Dynamic quorum is disabled. With dynamic quorum, the cluster adjusts the votes when nodes fail and can survive the sequential failure of all but one node. Enable dynamic quorum unless there is a specific reason not to.
+    WitnessLocationBP = The file share witness {0} is hosted by the virtual machine {1}, which runs on this cluster. If the cluster loses nodes, the witness can fail together with them and cannot provide the deciding vote. Place the witness outside the cluster, for example on another server or as cloud witness.
+    WitnessVmFailed = Unable to read the virtual machines of '{0}' for the witness check: {1}
 '@
 
 # Get-AbrHvClusterNetwork

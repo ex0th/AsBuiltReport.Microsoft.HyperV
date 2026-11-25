@@ -595,6 +595,56 @@ function Resolve-HvQuorumState {
     }
 }
 
+function Resolve-HvWitnessHost {
+    <#
+    .SYNOPSIS
+        Finds the virtual machine of the cluster that hosts the file share witness.
+    .DESCRIPTION
+        Pure function without remote calls. Compares the server of the witness share path (\\server\share)
+        with the virtual machines of the cluster: VM name, guest host names (Hyper-V data exchange) and IP
+        addresses. Names are compared by their first label, so 'fs01' matches 'fs01.example.com'.
+
+        Returns the name of the matching virtual machine, or nothing.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [AllowNull()]
+        [AllowEmptyString()]
+        [String] $SharePath,
+
+        # Virtual machines: Name, HostNames, IPAddresses
+        [AllowEmptyCollection()]
+        [Object[]] $VM = @()
+    )
+
+    $Server = ([string]$SharePath).TrimStart('\').Split('\')[0].Trim().TrimEnd('.')
+    if ([string]::IsNullOrEmpty($Server)) {
+        return
+    }
+    $Address = $null
+    $IsAddress = [System.Net.IPAddress]::TryParse($Server, [ref]$Address)
+    $ShortName = $Server.Split('.')[0]
+
+    foreach ($Item in @($VM | Where-Object { $_ })) {
+        if ($IsAddress) {
+            $Addresses = @($Item.IPAddresses | Where-Object { $_ } | ForEach-Object { ([string]$_).Split('/')[0] })
+            if ($Addresses -contains $Address.ToString()) {
+                return [string]$Item.Name
+            }
+            continue
+        }
+        $Names = @(@($Item.Name) + @($Item.HostNames) | Where-Object { $_ } | ForEach-Object { ([string]$_).Split('.')[0] })
+        if ($Names -contains $ShortName) {
+            return [string]$Item.Name
+        }
+    }
+}
+
 function Resolve-HvClusterNetwork {
     <#
     .SYNOPSIS

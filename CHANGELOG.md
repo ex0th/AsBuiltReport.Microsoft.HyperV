@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Cluster Overview` section with cluster configuration and node summary including OS build per node
 - Health checks for node reachability, Hyper-V role, node state and OS build consistency between nodes
 - `Cluster Quorum` section with quorum model, witness (disk, file share or cloud) and the assigned and current vote of every node; node votes are no longer listed in the cluster overview
-- Health checks for a missing quorum witness (critical for two voting nodes), a witness that is not online and disabled dynamic quorum
+- Health checks for a missing quorum witness (critical for two voting nodes), a witness that is not online, a file share witness hosted by a virtual machine of the same cluster and disabled dynamic quorum
 - `Cluster Networks` section with role, state, subnets and live migration use of every cluster network, and the network interfaces of every node
 - Health checks for cluster networks and interfaces that are not up and for clusters with fewer than two networks for cluster communication
 - `Live Migration` section with the cluster settings (networks, parallel migrations, SMB bandwidth limit) and the Hyper-V live migration settings of every host, also for standalone hosts; new `InfoLevel.LiveMigration`

@@ -71,6 +71,34 @@
                     }
                 }
                 $QuorumState = Resolve-HvQuorumState -QuorumData $QuorumData
+
+                # A file share witness on a virtual machine of the same cluster fails together with the cluster.
+                $WitnessVm = $null
+                if ($Healthcheck.Cluster.QuorumWitnessLocation -and $QuorumState.WitnessType -eq 'FileShare' -and $QuorumData.WitnessTarget) {
+                    $VmIdentity = @(Invoke-HvNodeCommand -FailureMessage $LocalizedData.WitnessVmFailed -ScriptBlock {
+                            foreach ($VM in @(Get-VM -ErrorAction SilentlyContinue)) {
+                                # Guest host name from the Hyper-V data exchange (read-only CIM class).
+                                $Kvp = Get-CimInstance -Namespace 'root\virtualization\v2' -ClassName 'Msvm_KvpExchangeComponent' `
+                                    -Filter "SystemName='$($VM.Id)'" -ErrorAction SilentlyContinue
+                                $HostNames = foreach ($ItemXml in @($Kvp.GuestIntrinsicExchangeItems | Where-Object { $_ })) {
+                                    $Xml = $ItemXml -as [xml]
+                                    if ($Xml) {
+                                        $Properties = @($Xml.INSTANCE.PROPERTY)
+                                        if (($Properties | Where-Object { $_.NAME -eq 'Name' }).VALUE -eq 'FullyQualifiedDomainName') {
+                                            [string]($Properties | Where-Object { $_.NAME -eq 'Data' }).VALUE
+                                        }
+                                    }
+                                }
+                                [PSCustomObject]@{
+                                    Name = [string]$VM.Name
+                                    HostNames = [string[]]@($HostNames | Where-Object { $_ })
+                                    IPAddresses = [string[]]@(Get-VMNetworkAdapter -VM $VM -ErrorAction SilentlyContinue |
+                                            ForEach-Object { @($_.IPAddresses) } | Where-Object { $_ } | ForEach-Object { [string]$_ })
+                                }
+                            }
+                        })
+                    $WitnessVm = Resolve-HvWitnessHost -SharePath $QuorumData.WitnessTarget -VM $VmIdentity
+                }
                 #endregion Collection
 
                 #region Quorum configuration object
@@ -136,6 +164,10 @@
                 if ($ShowDynamicQuorumCheck) {
                     $QuorumObj | Set-Style -Style Warning -Property $LocalizedData.DynamicQuorum
                 }
+                $ShowWitnessLocationCheck = [bool]$WitnessVm
+                if ($ShowWitnessLocationCheck) {
+                    $QuorumObj | Set-Style -Style Critical -Property $LocalizedData.WitnessSharePath
+                }
                 #endregion Health checks
 
                 Section -Style Heading2 $LocalizedData.Heading {
@@ -153,7 +185,7 @@
                         }
                         $QuorumObj | Table @TableParams
 
-                        if ($ShowWitnessCheck -or $ShowWitnessStateCheck -or $ShowDynamicQuorumCheck) {
+                        if ($ShowWitnessCheck -or $ShowWitnessStateCheck -or $ShowDynamicQuorumCheck -or $ShowWitnessLocationCheck) {
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline
                             BlankLine
                             if ($ShowWitnessCheck) {
@@ -166,6 +198,10 @@
                             }
                             if ($ShowWitnessStateCheck) {
                                 Paragraph ($LocalizedData.WitnessStateBP -f $QuorumData.WitnessName, $QuorumData.WitnessState)
+                                BlankLine
+                            }
+                            if ($ShowWitnessLocationCheck) {
+                                Paragraph ($LocalizedData.WitnessLocationBP -f $QuorumData.WitnessTarget, $WitnessVm)
                                 BlankLine
                             }
                             if ($ShowDynamicQuorumCheck) {

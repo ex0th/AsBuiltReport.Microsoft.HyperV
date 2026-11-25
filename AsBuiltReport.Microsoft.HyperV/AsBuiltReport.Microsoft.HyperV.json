@@ -40,6 +40,7 @@
             "NodeOSBuildConsistency": true,
             "QuorumWitness": true,
             "QuorumWitnessState": true,
+            "QuorumWitnessLocation": true,
             "DynamicQuorum": true,
             "NetworkState": true,
             "NetworkRedundancy": true,
