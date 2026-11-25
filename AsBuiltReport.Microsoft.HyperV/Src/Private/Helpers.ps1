@@ -891,6 +891,74 @@ function Resolve-HvHostSecurity {
     }
 }
 
+function Resolve-HvNetworkFinding {
+    <#
+    .SYNOPSIS
+        Evaluates the virtual switch, RDMA and DCB configuration of one Hyper-V host.
+    .DESCRIPTION
+        Pure function without remote calls. Input properties of NetworkData:
+        Switches (Name, EmbeddedTeaming, Members, LoadBalancingAlgorithm),
+        HostVnics (Name, SwitchName, RdmaEnabled, MappedAdapter),
+        Adapters (Name, Status, RdmaCapable, RdmaEnabled, RdmaType, DcbEnabled),
+        Qos (Available, PfcPriorities, DcbxWilling).
+
+        RdmaType uses the values of *NetworkDirectTechnology: 1 iWARP, 2 InfiniBand, 3 RoCE, 4 RoCEv2.
+
+        Returns one object per finding with Check and Object:
+        SetLoadBalancing  SET switch that does not use the Hyper-V port load balancing algorithm
+        RdmaDisabled      S2D host with an RDMA capable adapter that is up but has RDMA disabled
+        RocePfc           RoCE adapter with RDMA enabled but without PFC or with DCB disabled on the adapter
+        DcbxWilling       PFC configured and the host accepts DCBX settings from the switch
+        VnicTeamMapping   RDMA host vNIC on a SET switch with two or more members without a team mapping
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [Object] $NetworkData,
+
+        # Storage Spaces Direct uses RDMA for the storage traffic between the nodes.
+        [Switch] $IsS2D
+    )
+
+    $Switches = @($NetworkData.Switches | Where-Object { $_ })
+    foreach ($SwitchItem in $Switches) {
+        if ([string]$SwitchItem.EmbeddedTeaming -eq 'True' -and
+            -not [string]::IsNullOrEmpty([string]$SwitchItem.LoadBalancingAlgorithm) -and
+            [string]$SwitchItem.LoadBalancingAlgorithm -ne 'HyperVPort') {
+            [PSCustomObject]@{ Check = 'SetLoadBalancing'; Object = [string]$SwitchItem.Name }
+        }
+    }
+
+    $PfcPriorities = @($NetworkData.Qos.PfcPriorities | Where-Object { $null -ne $_ -and [string]$_ -ne '' })
+    foreach ($Adapter in @($NetworkData.Adapters | Where-Object { $_ })) {
+        $RdmaEnabled = ([string]$Adapter.RdmaEnabled -eq 'True')
+        if ($IsS2D -and [string]$Adapter.RdmaCapable -eq 'True' -and -not $RdmaEnabled -and [string]$Adapter.Status -eq 'Up') {
+            [PSCustomObject]@{ Check = 'RdmaDisabled'; Object = [string]$Adapter.Name }
+        }
+        if ($RdmaEnabled -and [string]$Adapter.RdmaType -in '3', '4' -and
+            ($PfcPriorities.Count -eq 0 -or [string]$Adapter.DcbEnabled -ne 'True')) {
+            [PSCustomObject]@{ Check = 'RocePfc'; Object = [string]$Adapter.Name }
+        }
+    }
+
+    if ($PfcPriorities.Count -gt 0 -and [string]$NetworkData.Qos.DcbxWilling -eq 'True') {
+        [PSCustomObject]@{ Check = 'DcbxWilling'; Object = '' }
+    }
+
+    foreach ($Vnic in @($NetworkData.HostVnics | Where-Object { $_ })) {
+        $SwitchItem = $Switches | Where-Object { [string]$_.Name -eq [string]$Vnic.SwitchName } | Select-Object -First 1
+        if ([string]$Vnic.RdmaEnabled -eq 'True' -and $SwitchItem -and [string]$SwitchItem.EmbeddedTeaming -eq 'True' -and
+            @($SwitchItem.Members | Where-Object { $_ }).Count -ge 2 -and [string]::IsNullOrEmpty([string]$Vnic.MappedAdapter)) {
+            [PSCustomObject]@{ Check = 'VnicTeamMapping'; Object = [string]$Vnic.Name }
+        }
+    }
+}
+
 function Resolve-HvClusterGroup {
     <#
     .SYNOPSIS

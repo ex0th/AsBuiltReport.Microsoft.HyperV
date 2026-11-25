@@ -59,8 +59,8 @@
                 #region Objects
                 $RoleObj = @(foreach ($Role in $Roles) {
                         $Group = $GroupData | Where-Object { $_.Name -eq $Role.Name } | Select-Object -First 1
-                        $TypeLabel = $LocalizedData["Type$($Role.GroupType)"]
-                        $PriorityLabel = $LocalizedData["Priority$($Role.PriorityKey)"]
+                        $TypeLabel = if ($Role.GroupType) { $LocalizedData["Type$($Role.GroupType)"] }
+                        $PriorityLabel = if ($Role.PriorityKey) { $LocalizedData["Priority$($Role.PriorityKey)"] }
                         [PSCustomObject][ordered]@{
                             $LocalizedData.RoleName = $Role.Name
                             $LocalizedData.RoleType = $(if ($TypeLabel) { $TypeLabel } else { ConvertTo-HvDisplayValue $Role.GroupType })

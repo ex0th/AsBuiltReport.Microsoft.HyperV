@@ -63,6 +63,9 @@ Describe 'Localization data' {
     It 'provides a label for every detection check' {
         $Section = $script:Template['GetAbrHvEnvironmentType']
         $HelperText = Get-Content -Path (Join-Path $script:ModuleFolder 'Src\Private\Helpers.ps1') -Raw
+        # Only the evidence of the environment detection; other helpers return findings with their own Check names.
+        $HelperText = [regex]::Match($HelperText, '(?s)function Resolve-HvEnvironmentType \{.*?(?=\r?\nfunction )').Value
+        $HelperText | Should -Not -BeNullOrEmpty
         $Checks = @([regex]::Matches($HelperText, "Check = '(?<check>\w+)'") | ForEach-Object { $_.Groups['check'].Value }) +
             @([regex]::Matches($HelperText, "'(?<check>ClusteredDisk|DataDisk)'") | ForEach-Object { $_.Groups['check'].Value }) |
             Sort-Object -Unique
@@ -147,6 +150,16 @@ Describe 'Localization data' {
         }
         foreach ($Key in 'On', 'Off', 'Unknown') {
             $Section.ContainsKey("SecureBoot$Key") | Should -BeTrue -Because "SecureBoot$Key is rendered for that state"
+        }
+    }
+
+    It 'provides display strings for the SET load balancing algorithms and RDMA types' {
+        $Section = $script:Template['GetAbrHvNetworking']
+        foreach ($Key in 'HyperVPort', 'Dynamic') {
+            $Section.ContainsKey("Algorithm$Key") | Should -BeTrue -Because "Algorithm$Key is rendered for that algorithm"
+        }
+        foreach ($Key in 1..4) {
+            $Section.ContainsKey("RdmaTechnology$Key") | Should -BeTrue -Because "RdmaTechnology$Key is rendered for that RDMA type"
         }
     }
 

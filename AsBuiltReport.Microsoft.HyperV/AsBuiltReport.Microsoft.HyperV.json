@@ -23,7 +23,8 @@
         "Environment": 1,
         "Cluster": 1,
         "LiveMigration": 1,
-        "Host": 1
+        "Host": 1,
+        "Networking": 1
     },
     "HealthCheck": {
         "Environment": {
@@ -53,6 +54,13 @@
         "Host": {
             "SchedulerType": true,
             "SecureBoot": true
+        },
+        "Networking": {
+            "SetLoadBalancing": true,
+            "RdmaState": true,
+            "RocePfc": true,
+            "DcbxWilling": true,
+            "VnicTeamMapping": true
         }
     }
 }

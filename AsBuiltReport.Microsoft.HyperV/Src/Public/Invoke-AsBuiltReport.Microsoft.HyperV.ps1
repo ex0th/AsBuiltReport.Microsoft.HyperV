@@ -166,9 +166,10 @@
 
                 # Hyper-V specific host settings (scheduler, platform security, VM versions)
                 Get-AbrHvHost
+                # Virtual switches (SET), host vNICs, physical adapters, RDMA and DCB
+                Get-AbrHvNetworking
 
                 # Planned sections (see README roadmap):
-                # Networking: SET switches, host vNICs, RDMA/DCB
                 # Storage by topology: S2D pool/virtual disks/cache/fault domains, iSCSI/FC/MPIO, SMB shares
                 # Consistency: node-to-node comparison as health checks
                 # Virtual machines (optional)

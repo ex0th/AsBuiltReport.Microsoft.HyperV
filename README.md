@@ -238,6 +238,7 @@ The table below outlines the default and maximum InfoLevel settings for each sec
 | Cluster       |        1        |        2        |
 | LiveMigration |        1        |        2        |
 | Host          |        1        |        2        |
+| Networking    |        1        |        2        |
 
 ### Healthcheck
 The **Healthcheck** schema is used to toggle health checks on or off.
@@ -264,6 +265,11 @@ The **Healthcheck** schema is used to toggle health checks on or off.
 | LiveMigration.SettingsConsistency | true / false | true  | Highlights live migration settings that differ between hosts                 | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Host.SchedulerType              | true / false | true    | Highlights hosts that use the classic hypervisor scheduler with SMT enabled  | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | Host.SecureBoot                 | true / false | true    | Highlights hosts with Secure Boot disabled                                   | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Networking.SetLoadBalancing     | true / false | true    | Highlights SET switches that do not use Hyper-V port load balancing          | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Networking.RdmaState            | true / false | true    | Highlights RDMA capable adapters with RDMA disabled on Storage Spaces Direct hosts | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Networking.RocePfc              | true / false | true    | Highlights RoCE adapters without priority flow control or with DCB disabled  | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Networking.DcbxWilling          | true / false | true    | Highlights hosts with PFC that accept DCB settings from the switch (DCBX willing) | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Networking.VnicTeamMapping      | true / false | true    | Highlights RDMA host vNICs on multi-member SET switches without team mapping | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/examples.svg" alt="" width="24" height="24" align="top"> Examples
 <!-- ********** Add some examples. Use other AsBuiltReport modules as a guide. ********** -->
@@ -289,7 +295,6 @@ The report follows the PScribo conventions used across AsBuiltReport modules, so
 
 | Area | Planned content |
 |---|---|
-| Networking | Virtual switches including SET, host vNICs, RDMA, DCB/QoS (PFC, ETS) |
 | Storage: S2D / Azure Local | Storage pool, physical disks and cache, virtual disks with resiliency and tiers, fault domains |
 | Storage: 3-tier | iSCSI targets and sessions, Fibre Channel ports, MPIO policies, CSV and cluster disks |
 | Storage: SMB | SMB shares used by Hyper-V, SMB Multichannel and SMB Direct |
