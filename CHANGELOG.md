@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ##### This project is community maintained and has no sponsorship from Microsoft, its employees or any of its affiliates.
 
+## [0.2.1] - 2026-11-25
+
+### Fixed
+
+- The workflows use actions/checkout v5, actions/upload-artifact v5 and actions/stale v10, which run on Node.js 24 (Node.js 20 is deprecated on GitHub runners)
+
 ## [0.2.0] - 2026-11-25
 
 ### Added
