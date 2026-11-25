@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health checks for cluster networks and interfaces that are not up and for clusters with fewer than two networks for cluster communication
 - `Live Migration` section with the cluster settings (networks, parallel migrations, SMB bandwidth limit) and the Hyper-V live migration settings of every host, also for standalone hosts; new `InfoLevel.LiveMigration`
 - Health checks for clusters that exclude every network from live migration, hosts with live migration disabled and live migration settings that differ between hosts
-- `Cluster Roles` section with type, owner node, state, priority, preferred owners and failover settings of every clustered role
+- `Cluster Roles` section with the roles per node (InfoLevel 1) and the type, owner node, state, priority, preferred owners and failover settings of every clustered role (InfoLevel 2)
 - `Cluster Shared Volumes` section with path, owner, state, I/O mode per node, capacity and free space
 - `Cluster-Aware Updating` section with the self-updating role, its schedule and options and the last updating run
 - `Hyper-V Hosts` section with the Hyper-V specific host settings that AsBuiltReport.Microsoft.Windows does not cover: hypervisor scheduler, virtualization-based security and running security services, Secure Boot, TPM, VM configuration versions, enhanced session mode, GPU partitioning, Discrete Device Assignment and virtual Fibre Channel SANs; new `InfoLevel.Host`

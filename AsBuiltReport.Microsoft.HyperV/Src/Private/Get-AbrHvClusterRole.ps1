@@ -75,6 +75,26 @@
                         }
                     })
 
+                # Summary per node: every node of the discovery, also nodes without roles.
+                $SummaryNodes = @(@($HvNodeFacts | ForEach-Object { [string]$_.ComputerName }) +
+                    @($Roles | ForEach-Object { $_.OwnerNode }) | Where-Object { $_ } | Sort-Object -Unique)
+                $SummaryItems = @(foreach ($NodeName in $SummaryNodes) {
+                        $NodeRoles = @($Roles | Where-Object { $_.OwnerNode -eq $NodeName })
+                        $NotOnline = @($NodeRoles | Where-Object { $_.StateSeverity -ne 'Ok' })
+                        [PSCustomObject]@{
+                            Severity = $(if ($NotOnline | Where-Object { $_.StateSeverity -eq 'Critical' }) { 'Critical' } elseif ($NotOnline.Count -gt 0) { 'Warning' } else { 'Ok' })
+                            Row = [PSCustomObject][ordered]@{
+                                $LocalizedData.Node = $NodeName
+                                $LocalizedData.RoleCount = $NodeRoles.Count
+                                $LocalizedData.VmCount = @($NodeRoles | Where-Object { $_.GroupType -eq 'VirtualMachine' }).Count
+                                $LocalizedData.OtherRoleCount = @($NodeRoles | Where-Object { $_.GroupType -ne 'VirtualMachine' }).Count
+                                $LocalizedData.OnlineCount = @($NodeRoles | Where-Object { $_.State -eq 'Online' }).Count
+                                $LocalizedData.OfflineCount = @($NodeRoles | Where-Object { $_.State -eq 'Offline' }).Count
+                                $LocalizedData.NotOnlineCount = $NotOnline.Count
+                            }
+                        }
+                    })
+
                 $FailoverObj = @()
                 if ($InfoLevel.Cluster -ge 2) {
                     $FailoverObj = @(foreach ($Role in $Roles) {
@@ -113,6 +133,9 @@
                         $RoleObj | Where-Object { $_.$($LocalizedData.RoleName) -eq $Role.Name } |
                             Set-Style -Style $Role.StateSeverity -Property $LocalizedData.State
                     }
+                    foreach ($Item in @($SummaryItems | Where-Object { $_.Severity -ne 'Ok' })) {
+                        $Item.Row | Set-Style -Style $Item.Severity -Property $LocalizedData.NotOnlineCount
+                    }
                 }
                 #endregion Health checks
 
@@ -122,21 +145,36 @@
                     if ($RoleObj.Count -eq 0) {
                         Paragraph $LocalizedData.NoRoles
                     } else {
+                        # InfoLevel 1: roles per node; the full list follows from InfoLevel 2.
                         $TableParams = @{
-                            Name = "$($LocalizedData.TableRoles) - $HvObjectName"
+                            Name = "$($LocalizedData.TableSummary) - $HvObjectName"
                             List = $false
-                            ColumnWidths = 24, 16, 15, 12, 12, 21
+                            ColumnWidths = 22, 12, 14, 13, 12, 12, 15
                         }
                         if ($Report.ShowTableCaptions) {
                             $TableParams['Caption'] = "- $($TableParams.Name)"
                         }
-                        $RoleObj | Table @TableParams
+                        @($SummaryItems | ForEach-Object { $_.Row }) | Table @TableParams
 
                         if ($ShowStateCheck) {
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline
                             BlankLine
                             Paragraph ($LocalizedData.RoleStateBP -f (($UnhealthyRoles | ForEach-Object { $_.Name }) -join ', '))
                             BlankLine
+                        }
+
+                        if ($InfoLevel.Cluster -ge 2) {
+                            Section -Style Heading3 $LocalizedData.HeadingRoles {
+                                $TableParams = @{
+                                    Name = "$($LocalizedData.TableRoles) - $HvObjectName"
+                                    List = $false
+                                    ColumnWidths = 24, 16, 15, 12, 12, 21
+                                }
+                                if ($Report.ShowTableCaptions) {
+                                    $TableParams['Caption'] = "- $($TableParams.Name)"
+                                }
+                                $RoleObj | Table @TableParams
+                            }
                         }
 
                         if ($FailoverObj.Count -gt 0) {
