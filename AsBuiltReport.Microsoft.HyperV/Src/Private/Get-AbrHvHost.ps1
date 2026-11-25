@@ -229,12 +229,10 @@
                         Paragraph $LocalizedData.HealthCheck -Bold -Underline
                         BlankLine
                         if ($ShowSchedulerCheck) {
-                            Paragraph ($LocalizedData.SchedulerTypeBP -f ($SchedulerHosts -join ', '))
-                            BlankLine
+                            Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.SchedulerTypeFinding -f ($SchedulerHosts -join ', ')) -Recommendation $LocalizedData.SchedulerTypeBP
                         }
                         if ($ShowSecureBootCheck) {
-                            Paragraph ($LocalizedData.SecureBootBP -f ($SecureBootHosts -join ', '))
-                            BlankLine
+                            Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.SecureBootFinding -f ($SecureBootHosts -join ', ')) -Recommendation $LocalizedData.SecureBootBP
                         }
                     }
 

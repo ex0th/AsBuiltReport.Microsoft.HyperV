@@ -174,10 +174,10 @@
 
                 #region Health checks
                 $CheckMap = [ordered]@{
-                    Checkpoints = @{ Enabled = $Healthcheck.VirtualMachines.Checkpoints; Column = $LocalizedData.Checkpoints; Text = $LocalizedData.CheckpointsBP }
-                    NotClustered = @{ Enabled = $Healthcheck.VirtualMachines.NotClustered; Column = $LocalizedData.Clustered; Text = $LocalizedData.NotClusteredBP }
-                    ConfigurationVersion = @{ Enabled = $Healthcheck.VirtualMachines.ConfigurationVersion; Column = $LocalizedData.Version; Text = $LocalizedData.ConfigurationVersionBP }
-                    NetworkDisconnected = @{ Enabled = $Healthcheck.VirtualMachines.NetworkDisconnected; Column = $LocalizedData.Network; Text = $LocalizedData.NetworkDisconnectedBP }
+                    Checkpoints = @{ Enabled = $Healthcheck.VirtualMachines.Checkpoints; Column = $LocalizedData.Checkpoints; Finding = $LocalizedData.CheckpointsFinding; Recommendation = $LocalizedData.CheckpointsBP }
+                    NotClustered = @{ Enabled = $Healthcheck.VirtualMachines.NotClustered; Column = $LocalizedData.Clustered; Finding = $LocalizedData.NotClusteredFinding; Recommendation = $LocalizedData.NotClusteredBP }
+                    ConfigurationVersion = @{ Enabled = $Healthcheck.VirtualMachines.ConfigurationVersion; Column = $LocalizedData.Version; Finding = $LocalizedData.ConfigurationVersionFinding; Recommendation = $LocalizedData.ConfigurationVersionBP }
+                    NetworkDisconnected = @{ Enabled = $Healthcheck.VirtualMachines.NetworkDisconnected; Column = $LocalizedData.Network; Finding = $LocalizedData.NetworkDisconnectedFinding; Recommendation = $LocalizedData.NetworkDisconnectedBP }
                 }
                 $ShownChecks = New-Object -TypeName System.Collections.Generic.List[String]
                 foreach ($CheckName in @($CheckMap.Keys)) {
@@ -221,8 +221,8 @@
                             BlankLine
                             foreach ($CheckName in $ShownChecks) {
                                 $Names = @($VmObj | Where-Object { $_.VM.Findings -contains $CheckName } | ForEach-Object { $_.VM.Name })
-                                Paragraph ($CheckMap[$CheckName].Text -f ($Names -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($CheckMap[$CheckName].Finding -f ($Names -join ', ')) `
+                                    -Recommendation $CheckMap[$CheckName].Recommendation
                             }
                         }
 

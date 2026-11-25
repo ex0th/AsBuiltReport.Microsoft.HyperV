@@ -251,8 +251,7 @@
                     if ($ShowCheck) {
                         Paragraph $LocalizedData.HealthCheck -Bold -Underline
                         BlankLine
-                        Paragraph ($LocalizedData.ConsistencyBP -f (($CheckedResults | ForEach-Object { $_.Label }) -join ', '))
-                        BlankLine
+                        Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.ConsistencyFinding -f (($CheckedResults | ForEach-Object { $_.Label }) -join ', ')) -Recommendation $LocalizedData.ConsistencyBP
                     }
 
                     Section -Style Heading3 $LocalizedData.HeadingDeviations {

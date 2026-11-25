@@ -163,16 +163,13 @@
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline
                             BlankLine
                             if ($ShowStateCheck) {
-                                Paragraph ($LocalizedData.CsvStateBP -f (($StateIssues | ForEach-Object { $_.Name }) -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity (Get-HvMaxSeverity @($StateIssues | ForEach-Object { $_.StateSeverity })) -Finding ($LocalizedData.CsvStateFinding -f (($StateIssues | ForEach-Object { $_.Name }) -join ', ')) -Recommendation $LocalizedData.CsvStateBP
                             }
                             if ($ShowIoCheck) {
-                                Paragraph ($LocalizedData.CsvRedirectedAccessBP -f (($IoIssues | ForEach-Object { $_.Name }) -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.CsvRedirectedAccessFinding -f (($IoIssues | ForEach-Object { $_.Name }) -join ', ')) -Recommendation $LocalizedData.CsvRedirectedAccessBP
                             }
                             if ($ShowFreeCheck) {
-                                Paragraph ($LocalizedData.CsvFreeSpaceBP -f (($FreeIssues | ForEach-Object { $_.Name }) -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity (Get-HvMaxSeverity @($FreeIssues | ForEach-Object { $_.FreeSeverity })) -Finding ($LocalizedData.CsvFreeSpaceFinding -f (($FreeIssues | ForEach-Object { $_.Name }) -join ', ')) -Recommendation $LocalizedData.CsvFreeSpaceBP
                             }
                         }
 

@@ -279,7 +279,8 @@
                     SetLoadBalancing = @{
                         Enabled = $Healthcheck.Networking.SetLoadBalancing
                         Targets = @(@{ Table = $SwitchObj; KeyColumn = $LocalizedData.SwitchName; Column = $LocalizedData.LoadBalancing })
-                        Text = $LocalizedData.SetLoadBalancingBP
+                        Finding = $LocalizedData.SetLoadBalancingFinding
+                        Recommendation = $LocalizedData.SetLoadBalancingBP
                     }
                     RdmaDisabled = @{
                         Enabled = $Healthcheck.Networking.RdmaState
@@ -287,32 +288,38 @@
                             @{ Table = $AdapterObj; KeyColumn = $LocalizedData.AdapterName; Column = $LocalizedData.Rdma }
                             @{ Table = $VnicObj; KeyColumn = $LocalizedData.VnicName; Column = $LocalizedData.Rdma }
                         )
-                        Text = $LocalizedData.RdmaStateBP
+                        Finding = $LocalizedData.RdmaStateFinding
+                        Recommendation = $LocalizedData.RdmaStateBP
                     }
                     NoStorageRdma = @{
                         Enabled = $Healthcheck.Networking.RdmaState
                         Targets = @()
-                        Text = $LocalizedData.NoStorageRdmaBP
+                        Finding = $LocalizedData.NoStorageRdmaFinding
+                        Recommendation = $LocalizedData.NoStorageRdmaBP
                     }
                     RocePfc = @{
                         Enabled = $Healthcheck.Networking.RocePfc
                         Targets = @(@{ Table = $AdapterObj; KeyColumn = $LocalizedData.AdapterName; Column = $LocalizedData.RdmaType })
-                        Text = $LocalizedData.RocePfcBP
+                        Finding = $LocalizedData.RocePfcFinding
+                        Recommendation = $LocalizedData.RocePfcBP
                     }
                     DcbxWilling = @{
                         Enabled = $Healthcheck.Networking.DcbxWilling
                         Targets = @(@{ Table = $DcbObj; KeyColumn = ''; Column = $LocalizedData.DcbxWilling })
-                        Text = $LocalizedData.DcbxWillingBP
+                        Finding = $LocalizedData.DcbxWillingFinding
+                        Recommendation = $LocalizedData.DcbxWillingBP
                     }
                     DcbTrafficClass = @{
                         Enabled = $Healthcheck.Networking.DcbTrafficClass
                         Targets = @(@{ Table = $DcbObj; KeyColumn = ''; Column = $LocalizedData.TrafficClasses })
-                        Text = $LocalizedData.DcbTrafficClassBP
+                        Finding = $LocalizedData.DcbTrafficClassFinding
+                        Recommendation = $LocalizedData.DcbTrafficClassBP
                     }
                     VnicTeamMapping = @{
                         Enabled = $Healthcheck.Networking.VnicTeamMapping
                         Targets = @(@{ Table = $VnicObj; KeyColumn = $LocalizedData.VnicName; Column = $LocalizedData.MappedAdapter })
-                        Text = $LocalizedData.VnicTeamMappingBP
+                        Finding = $LocalizedData.VnicTeamMappingFinding
+                        Recommendation = $LocalizedData.VnicTeamMappingBP
                     }
                 }
                 $ShownChecks = New-Object -TypeName System.Collections.Generic.List[String]
@@ -343,8 +350,8 @@
                             $Objects = @($Findings | Where-Object { $_.Check -eq $CheckName } | ForEach-Object {
                                     if ($_.Object) { '{0} ({1})' -f $_.Object, $_.NodeName } else { $_.NodeName }
                                 })
-                            Paragraph ($Checks[$CheckName].Text -f ($Objects -join ', '))
-                            BlankLine
+                            Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($Checks[$CheckName].Finding -f ($Objects -join ', ')) `
+                                -Recommendation $Checks[$CheckName].Recommendation
                         }
                     }
                 }

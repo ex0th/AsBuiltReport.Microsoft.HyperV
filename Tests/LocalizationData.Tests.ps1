@@ -199,6 +199,36 @@ Describe 'Localization data' {
         }
     }
 
+    It 'provides a finding and a recommendation for every health check' {
+        # Every <Key>Finding has a <Key>BP recommendation and vice versa, so the summary can show both.
+        foreach ($SectionName in $script:Template.Keys) {
+            $Section = $script:Template[$SectionName]
+            foreach ($Key in @($Section.Keys | Where-Object { $_ -match 'Finding$' -and $_ -ne 'Finding' })) {
+                $Section.ContainsKey(($Key -replace 'Finding$', 'BP')) | Should -BeTrue -Because "$SectionName/$Key needs a recommendation"
+            }
+            foreach ($Key in @($Section.Keys | Where-Object { $_ -match 'BP$' })) {
+                $Section.ContainsKey(($Key -replace 'BP$', 'Finding')) | Should -BeTrue -Because "$SectionName/$Key needs a finding"
+            }
+        }
+    }
+
+    It 'provides display strings for every health check severity' {
+        $Section = $script:Template['GetAbrHvHealthCheckSummary']
+        foreach ($Severity in 'Critical', 'Warning') {
+            $Section.ContainsKey("Severity$Severity") | Should -BeTrue -Because "Severity$Severity is rendered in the summary"
+        }
+    }
+
+    It 'keeps the column names of the Health Check Summary in en-US' {
+        # The documentation generator reads this table by its column names.
+        $Section = $script:Template['GetAbrHvHealthCheckSummary']
+        $Section.Area | Should -BeExactly 'Area'
+        $Section.Severity | Should -BeExactly 'Severity'
+        $Section.Finding | Should -BeExactly 'Finding'
+        $Section.Recommendation | Should -BeExactly 'Recommendation'
+        $Section.TableSummary | Should -BeExactly 'Health Check Summary'
+    }
+
     # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
     # -AllowNullOrEmptyForEach switch.
     if ($script:LanguageFolders.Count -gt 0) {

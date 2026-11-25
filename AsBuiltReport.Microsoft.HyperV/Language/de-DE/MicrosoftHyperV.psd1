@@ -98,8 +98,10 @@ GetAbrHvEnvironmentType = ConvertFrom-StringData @'
     ValueVhdLocation = SMB {0}, CSV {1}, lokal {2}
     ValueOverride = {0} (automatisch: {1})
     HealthCheck = Integritätsprüfung:
-    NodeReachabilityBP = Nicht alle Hosts waren erreichbar. Abschnitte, die Daten pro Host benötigen, sind unvollständig. Prüfen Sie WinRM-Verbindung und Namensauflösung für die fehlenden Knoten.
-    HyperVRoleBP = Die Hyper-V-Rolle ist auf folgenden Hosts nicht installiert: {0}. Jeder Host, auf dem virtuelle Computer laufen, benötigt die Hyper-V-Rolle, und alle Knoten eines Clusters sollten dieselben Rollen bereitstellen.
+    NodeReachabilityFinding = Nicht alle Hosts waren erreichbar. Abschnitte, die Daten pro Host benötigen, sind unvollständig.
+    NodeReachabilityBP = Prüfen Sie WinRM-Verbindung und Namensauflösung für die fehlenden Knoten.
+    HyperVRoleFinding = Die Hyper-V-Rolle ist auf folgenden Hosts nicht installiert: {0}.
+    HyperVRoleBP = Jeder Host, auf dem virtuelle Computer laufen, benötigt die Hyper-V-Rolle, und alle Knoten eines Clusters sollten dieselben Rollen bereitstellen.
 '@
 
 # Get-AbrHvClusterOverview
@@ -159,8 +161,10 @@ GetAbrHvClusterOverview = ConvertFrom-StringData @'
     OSVersion = Betriebssystem
     SerialNumber = Seriennummer
     HealthCheck = Integritätsprüfung:
-    NodeStateBP = Die folgenden Knoten haben nicht den Status Up: {0}. Ausgefallene oder angehaltene Knoten verringern die Failoverkapazität des Clusters.
-    NodeBuildBP = Die folgenden Knoten verwenden einen anderen Betriebssystembuild als der Rest des Clusters ({1}): {0}. Halten Sie alle Knoten auf demselben kumulativen Update.
+    NodeStateFinding = Die folgenden Knoten haben nicht den Status Up: {0}. Ausgefallene oder angehaltene Knoten verringern die Failoverkapazität des Clusters.
+    NodeStateBP = Setzen Sie angehaltene Knoten fort und bringen Sie ausgefallene Knoten wieder online, oder dokumentieren Sie, warum sie nicht verfügbar sind.
+    NodeBuildFinding = Die folgenden Knoten verwenden einen anderen Betriebssystembuild als der Rest des Clusters ({1}): {0}.
+    NodeBuildBP = Halten Sie alle Knoten auf demselben kumulativen Update.
 '@
 
 # Get-AbrHvClusterQuorum
@@ -201,11 +205,16 @@ GetAbrHvClusterQuorum = ConvertFrom-StringData @'
     AssignedVote = Zugewiesene Stimme
     CurrentVote = Aktuelle Stimme
     HealthCheck = Integritätsprüfung:
-    NoWitnessTwoNodesBP = Der Cluster hat zwei stimmberechtigte Knoten und keinen Zeugen. Das dynamische Quorum entzieht einem Knoten die Stimme, daher geht der Cluster offline, wenn der Knoten mit der verbleibenden Stimme unerwartet ausfällt. Konfigurieren Sie einen Cloud-, Dateifreigabe- oder Datenträgerzeugen.
-    NoWitnessBP = Es ist kein Quorumzeuge konfiguriert. Microsoft empfiehlt für jeden Cluster einen Zeugen, da der dynamische Zeuge die Gesamtzahl der Stimmen ungerade hält. Konfigurieren Sie einen Cloud-, Dateifreigabe- oder Datenträgerzeugen.
-    WitnessStateBP = Die Zeugenressource '{0}' hat den Status {1}. Solange der Zeuge nicht online ist, zählt seine Stimme nicht, und der Cluster toleriert weniger Ausfälle.
-    DynamicQuorumBP = Das dynamische Quorum ist deaktiviert. Mit dynamischem Quorum passt der Cluster die Stimmen bei Knotenausfällen an und übersteht den aufeinanderfolgenden Ausfall aller Knoten bis auf einen. Aktivieren Sie das dynamische Quorum, sofern es keinen bestimmten Grund dagegen gibt.
-    WitnessLocationBP = Der Dateifreigabenzeuge {0} liegt auf dem virtuellen Computer {1}, der auf diesem Cluster läuft. Verliert der Cluster Knoten, kann der Zeuge mit ihnen ausfallen und die entscheidende Stimme nicht liefern. Platzieren Sie den Zeugen außerhalb des Clusters, zum Beispiel auf einem anderen Server oder als Cloudzeugen.
+    NoWitnessTwoNodesFinding = Der Cluster hat zwei stimmberechtigte Knoten und keinen Zeugen. Das dynamische Quorum entzieht einem Knoten die Stimme, daher geht der Cluster offline, wenn der Knoten mit der verbleibenden Stimme unerwartet ausfällt.
+    NoWitnessTwoNodesBP = Konfigurieren Sie einen Cloud-, Dateifreigabe- oder Datenträgerzeugen.
+    NoWitnessFinding = Es ist kein Quorumzeuge konfiguriert. Microsoft empfiehlt für jeden Cluster einen Zeugen, da der dynamische Zeuge die Gesamtzahl der Stimmen ungerade hält.
+    NoWitnessBP = Konfigurieren Sie einen Cloud-, Dateifreigabe- oder Datenträgerzeugen.
+    WitnessStateFinding = Die Zeugenressource '{0}' hat den Status {1}. Solange der Zeuge nicht online ist, zählt seine Stimme nicht, und der Cluster toleriert weniger Ausfälle.
+    WitnessStateBP = Prüfen Sie die Zeugenressource und ihr Ziel (Datenträger, Dateifreigabe oder Speicherkonto) und bringen Sie den Zeugen online.
+    DynamicQuorumFinding = Das dynamische Quorum ist deaktiviert. Mit dynamischem Quorum passt der Cluster die Stimmen bei Knotenausfällen an und übersteht den aufeinanderfolgenden Ausfall aller Knoten bis auf einen.
+    DynamicQuorumBP = Aktivieren Sie das dynamische Quorum, sofern es keinen bestimmten Grund dagegen gibt.
+    WitnessLocationFinding = Der Dateifreigabenzeuge {0} liegt auf dem virtuellen Computer {1}, der auf diesem Cluster läuft. Verliert der Cluster Knoten, kann der Zeuge mit ihnen ausfallen und die entscheidende Stimme nicht liefern.
+    WitnessLocationBP = Platzieren Sie den Zeugen außerhalb des Clusters, zum Beispiel auf einem anderen Server oder als Cloudzeugen.
     WitnessVmFailed = Die virtuellen Computer von '{0}' konnten für die Zeugenprüfung nicht gelesen werden: {1}
 '@
 
@@ -240,8 +249,10 @@ GetAbrHvClusterNetwork = ConvertFrom-StringData @'
     RoleClusterAndClient = Cluster und Client
     RoleClientOnly = Nur Client
     HealthCheck = Integritätsprüfung:
-    NetworkStateBP = Die folgenden Clusternetzwerke oder Netzwerkschnittstellen sind nicht aktiv: {0}. Prüfen Sie die physischen Verbindungen, die Switchports und die IP-Konfiguration der betroffenen Adapter.
-    NetworkRedundancyBP = Der Cluster hat {0} Netzwerk(e) für die Clusterkommunikation im Status Up. Bei nur einem Netzwerk trennt ein Ausfall dieses Netzwerks die Knoten voneinander. Konfigurieren Sie mindestens zwei Netzwerke, die Clusterkommunikation zulassen.
+    NetworkStateFinding = Die folgenden Clusternetzwerke oder Netzwerkschnittstellen sind nicht aktiv: {0}.
+    NetworkStateBP = Prüfen Sie die physischen Verbindungen, die Switchports und die IP-Konfiguration der betroffenen Adapter.
+    NetworkRedundancyFinding = Der Cluster hat {0} Netzwerk(e) für die Clusterkommunikation im Status Up. Bei nur einem Netzwerk trennt ein Ausfall dieses Netzwerks die Knoten voneinander.
+    NetworkRedundancyBP = Konfigurieren Sie mindestens zwei Netzwerke, die Clusterkommunikation zulassen.
 '@
 
 # Get-AbrHvLiveMigration
@@ -279,9 +290,12 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueNoLimit = Kein Limit
     ValueMbps = {0} Mbit/s
     HealthCheck = Integritätsprüfung:
-    MigrationNetworkBP = Alle Clusternetzwerke sind von der Livemigration ausgeschlossen, daher können geclusterte virtuelle Computer nicht live migriert werden. Lassen Sie in den Livemigrationseinstellungen des Clusters mindestens ein Netzwerk zu, vorzugsweise ein dediziertes Netzwerk.
-    HostMigrationEnabledBP = Eingehende und ausgehende Livemigrationen sind in den Hyper-V-Einstellungen der folgenden Hosts deaktiviert: {0}. Aktivieren Sie die Livemigration, wenn diese Hosts laufende virtuelle Computer verschieben sollen.
-    SettingsConsistencyBP = Die folgenden Livemigrationseinstellungen unterscheiden sich zwischen den Hosts: {0} (Hosts: {1}). Verwenden Sie auf allen Hosts dieselben Einstellungen, damit sich Migrationen in jede Richtung gleich verhalten.
+    MigrationNetworkFinding = Alle Clusternetzwerke sind von der Livemigration ausgeschlossen, daher können geclusterte virtuelle Computer nicht live migriert werden.
+    MigrationNetworkBP = Lassen Sie in den Livemigrationseinstellungen des Clusters mindestens ein Netzwerk zu, vorzugsweise ein dediziertes Netzwerk.
+    HostMigrationEnabledFinding = Eingehende und ausgehende Livemigrationen sind in den Hyper-V-Einstellungen der folgenden Hosts deaktiviert: {0}.
+    HostMigrationEnabledBP = Aktivieren Sie die Livemigration, wenn diese Hosts laufende virtuelle Computer verschieben sollen.
+    SettingsConsistencyFinding = Die folgenden Livemigrationseinstellungen unterscheiden sich zwischen den Hosts: {0} (Hosts: {1}).
+    SettingsConsistencyBP = Verwenden Sie auf allen Hosts dieselben Einstellungen, damit sich Migrationen in jede Richtung gleich verhalten.
 '@
 
     # Get-AbrHvClusterRole
@@ -331,7 +345,8 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     FailbackImmediately = Zulassen, sofort
     FailbackWindow = Zulassen, zwischen {0}:00 und {1}:00 Uhr
     HealthCheck = Integritätsprüfung:
-    RoleStateBP = Die folgenden Rollen sind fehlerhaft oder nicht vollständig online: {0}. Prüfen Sie die Ressourcen dieser Rollen im Failovercluster-Manager und die Clusterereignisse.
+    RoleStateFinding = Die folgenden Rollen sind fehlerhaft oder nicht vollständig online: {0}.
+    RoleStateBP = Prüfen Sie die Ressourcen dieser Rollen im Failovercluster-Manager und die Clusterereignisse.
 '@
 
     # Get-AbrHvClusterSharedVolume
@@ -367,9 +382,12 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueDisabled = Deaktiviert
     ValueMB = {0} MB
     HealthCheck = Integritätsprüfung:
-    CsvStateBP = Die folgenden freigegebenen Clustervolumes sind nicht online oder im Wartungsmodus: {0}. Virtuelle Computer auf diesen Volumes sind möglicherweise nicht verfügbar.
-    CsvRedirectedAccessBP = Die folgenden freigegebenen Clustervolumes verwenden auf mindestens einem Knoten umgeleitete E/A aus einem anderen Grund als ReFS: {0}. Umgeleitete E/A läuft über das Clusternetzwerk und verringert die Leistung. Prüfen Sie die Speicheranbindung dieser Knoten.
-    CsvFreeSpaceBP = Die folgenden freigegebenen Clustervolumes haben weniger als 20 % freien Speicher (kritisch unter 10 %): {0}. Halten Sie genug freien Speicher für das Wachstum virtueller Festplatten, Prüfpunkte und Speicherabbilder vor.
+    CsvStateFinding = Die folgenden freigegebenen Clustervolumes sind nicht online oder im Wartungsmodus: {0}. Virtuelle Computer auf diesen Volumes sind möglicherweise nicht verfügbar.
+    CsvStateBP = Bringen Sie die Volumes online oder beenden Sie den Wartungsmodus nach Abschluss der Wartung.
+    CsvRedirectedAccessFinding = Die folgenden freigegebenen Clustervolumes verwenden auf mindestens einem Knoten umgeleitete E/A aus einem anderen Grund als ReFS: {0}. Umgeleitete E/A läuft über das Clusternetzwerk und verringert die Leistung.
+    CsvRedirectedAccessBP = Prüfen Sie die Speicheranbindung dieser Knoten.
+    CsvFreeSpaceFinding = Die folgenden freigegebenen Clustervolumes haben weniger als 20 % freien Speicher (kritisch unter 10 %): {0}.
+    CsvFreeSpaceBP = Halten Sie genug freien Speicher für das Wachstum virtueller Festplatten, Prüfpunkte und Speicherabbilder vor.
 '@
 
     # Get-AbrHvClusterAwareUpdating
@@ -406,9 +424,12 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ScheduleInterval = {0}, alle {1} Wochen
     ValueNoRun = Kein Lauf aufgezeichnet
     HealthCheck = Integritätsprüfung:
-    NoSelfUpdatingRoleBP = Der Cluster hat keine Rolle für die Selbstaktualisierung per clusterfähigem Aktualisieren. Stellen Sie sicher, dass die Knoten koordiniert aktualisiert werden, entweder mit der CAU-Rolle für Selbstaktualisierung oder mit Remoteaktualisierungsläufen.
-    SelfUpdatingOfflineBP = Die CAU-Rolle für die Selbstaktualisierung ist nicht online, daher starten geplante Aktualisierungsläufe nicht. Aktivieren Sie die Rolle, wenn sich der Cluster selbst aktualisieren soll.
-    LastRunBP = Der letzte Lauf des clusterfähigen Aktualisierens war nicht erfolgreich. Prüfen Sie im Bericht des Laufs, auf welchen Knoten er fehlgeschlagen ist.
+    NoSelfUpdatingRoleFinding = Der Cluster hat keine Rolle für die Selbstaktualisierung per clusterfähigem Aktualisieren.
+    NoSelfUpdatingRoleBP = Stellen Sie sicher, dass die Knoten koordiniert aktualisiert werden, entweder mit der CAU-Rolle für Selbstaktualisierung oder mit Remoteaktualisierungsläufen.
+    SelfUpdatingOfflineFinding = Die CAU-Rolle für die Selbstaktualisierung ist nicht online, daher starten geplante Aktualisierungsläufe nicht.
+    SelfUpdatingOfflineBP = Aktivieren Sie die Rolle, wenn sich der Cluster selbst aktualisieren soll.
+    LastRunFinding = Der letzte Lauf des clusterfähigen Aktualisierens war nicht erfolgreich.
+    LastRunBP = Prüfen Sie im Bericht des Laufs, auf welchen Knoten er fehlgeschlagen ist.
 '@
 
     # Get-AbrHvHost
@@ -474,8 +495,10 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueNotPresent = Nicht vorhanden
     ValueNone = Keine
     HealthCheck = Integritätsprüfung:
-    SchedulerTypeBP = Die folgenden Hosts verwenden den klassischen Hypervisor-Scheduler mit Simultaneous Multithreading (SMT): {0}. Beim klassischen Scheduler können sich virtuelle Prozessoren verschiedener virtueller Computer einen Prozessorkern teilen. Verwenden Sie den Core-Scheduler, der seit Windows Server 2019 Standard ist.
-    SecureBootBP = Der sichere Start ist auf den folgenden Hosts deaktiviert: {0}. Aktivieren Sie den sicheren Start in der UEFI-Firmware, um den Startvorgang des Hypervisors zu schützen.
+    SchedulerTypeFinding = Die folgenden Hosts verwenden den klassischen Hypervisor-Scheduler mit Simultaneous Multithreading (SMT): {0}. Beim klassischen Scheduler können sich virtuelle Prozessoren verschiedener virtueller Computer einen Prozessorkern teilen.
+    SchedulerTypeBP = Verwenden Sie den Core-Scheduler, der seit Windows Server 2019 Standard ist.
+    SecureBootFinding = Der sichere Start ist auf den folgenden Hosts deaktiviert: {0}.
+    SecureBootBP = Aktivieren Sie den sicheren Start in der UEFI-Firmware, um den Startvorgang des Hypervisors zu schützen.
 '@
 
     # Get-AbrHvNetworking
@@ -536,13 +559,20 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueTrafficClassStrict = {0}: Priorität {1}, strikte Priorität
     ValuePolicy = {0}: Priorität {1}
     HealthCheck = Integritätsprüfung:
-    SetLoadBalancingBP = Die folgenden SET-Switches verwenden nicht den Lastenausgleichsalgorithmus Hyper-V-Port: {0}. Hyper-V-Port ist der empfohlene Algorithmus für Switch Embedded Teaming.
-    RdmaStateBP = RDMA ist auf den folgenden RDMA-fähigen Adaptern deaktiviert, die Speicherdatenverkehr zwischen den Knoten übertragen (Clusternetzwerke oder SET-Mitglieder unter RDMA-Host-vNICs): {0}. Storage Spaces Direct verwendet für diesen Datenverkehr RDMA (SMB Direct). Aktivieren Sie RDMA auf diesen Adaptern.
-    NoStorageRdmaBP = Die folgenden Storage-Spaces-Direct-Hosts haben keinen Adapter mit aktiviertem RDMA in einem Clusternetzwerk: {0}. Der Speicherdatenverkehr zwischen den Knoten läuft über TCP, das mehr CPU benötigt und eine höhere Latenz hat. Verwenden Sie RDMA-fähige Adapter für die Speichernetzwerke.
-    DcbTrafficClassBP = Priority Flow Control und eine QoS-Richtlinie sind vorhanden, aber keine ETS-Datenverkehrsklasse reserviert Bandbreite für folgenden Datenverkehr: {0}. Legen Sie eine ETS-Datenverkehrsklasse für die SMB-Priorität und für die Priorität des Cluster-Heartbeats an, damit Speicher- und Clusterdatenverkehr unter Last ihre Bandbreite behalten.
-    RocePfcBP = Die folgenden RoCE-Adapter verwenden RDMA ohne Priority Flow Control (PFC) oder mit deaktiviertem DCB auf dem Adapter: {0}. RoCE erfordert ein verlustfreies Netzwerk; konfigurieren Sie PFC für die SMB-Direct-Priorität auf den Hosts und den Switches.
-    DcbxWillingBP = Die folgenden Hosts übernehmen DCB-Einstellungen vom Netzwerkswitch (DCBX Willing): {0}. Windows Server unterstützt DCBX nicht; setzen Sie den Willing-Modus auf False, damit der Host seine eigene Konfiguration behält.
-    VnicTeamMappingBP = Die folgenden RDMA-Host-vNICs auf SET-Switches mit mehreren Mitgliedern sind keinem physischen Adapter zugeordnet: {0}. Ordnen Sie jede RDMA-vNIC einem physischen Adapter des Teams zu, damit der SMB-Direct-Datenverkehr auf die Adapter verteilt wird.
+    SetLoadBalancingFinding = Die folgenden SET-Switches verwenden nicht den Lastenausgleichsalgorithmus Hyper-V-Port: {0}.
+    SetLoadBalancingBP = Hyper-V-Port ist der empfohlene Algorithmus für Switch Embedded Teaming.
+    RdmaStateFinding = RDMA ist auf den folgenden RDMA-fähigen Adaptern deaktiviert, die Speicherdatenverkehr zwischen den Knoten übertragen (Clusternetzwerke oder SET-Mitglieder unter RDMA-Host-vNICs): {0}. Storage Spaces Direct verwendet für diesen Datenverkehr RDMA (SMB Direct).
+    RdmaStateBP = Aktivieren Sie RDMA auf diesen Adaptern.
+    NoStorageRdmaFinding = Die folgenden Storage-Spaces-Direct-Hosts haben keinen Adapter mit aktiviertem RDMA in einem Clusternetzwerk: {0}. Der Speicherdatenverkehr zwischen den Knoten läuft über TCP, das mehr CPU benötigt und eine höhere Latenz hat.
+    NoStorageRdmaBP = Verwenden Sie RDMA-fähige Adapter für die Speichernetzwerke.
+    DcbTrafficClassFinding = Priority Flow Control und eine QoS-Richtlinie sind vorhanden, aber keine ETS-Datenverkehrsklasse reserviert Bandbreite für folgenden Datenverkehr: {0}.
+    DcbTrafficClassBP = Legen Sie eine ETS-Datenverkehrsklasse für die SMB-Priorität und für die Priorität des Cluster-Heartbeats an, damit Speicher- und Clusterdatenverkehr unter Last ihre Bandbreite behalten.
+    RocePfcFinding = Die folgenden RoCE-Adapter verwenden RDMA ohne Priority Flow Control (PFC) oder mit deaktiviertem DCB auf dem Adapter: {0}.
+    RocePfcBP = RoCE erfordert ein verlustfreies Netzwerk; konfigurieren Sie PFC für die SMB-Direct-Priorität auf den Hosts und den Switches.
+    DcbxWillingFinding = Die folgenden Hosts übernehmen DCB-Einstellungen vom Netzwerkswitch (DCBX Willing): {0}.
+    DcbxWillingBP = Windows Server unterstützt DCBX nicht; setzen Sie den Willing-Modus auf False, damit der Host seine eigene Konfiguration behält.
+    VnicTeamMappingFinding = Die folgenden RDMA-Host-vNICs auf SET-Switches mit mehreren Mitgliedern sind keinem physischen Adapter zugeordnet: {0}.
+    VnicTeamMappingBP = Ordnen Sie jede RDMA-vNIC einem physischen Adapter des Teams zu, damit der SMB-Direct-Datenverkehr auf die Adapter verteilt wird.
 '@
 
     # Get-AbrHvStorageS2D
@@ -625,12 +655,18 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     FaultObject = Objekt
     FaultReason = Ursache
     HealthCheck = Integritätsprüfung:
-    PoolHealthBP = Der Speicherpool {0} ist nicht fehlerfrei. Prüfen Sie die physischen Datenträger und die Speicheraufträge des Pools.
-    ReserveCapacityBP = Die nicht zugeordnete Kapazität des Speicherpools ({1}) liegt unter der empfohlenen Reserve von {0}. Lassen Sie die Kapazität eines Kapazitätslaufwerks je Knoten (bis zu vier Laufwerke) frei, damit der Pool nach einem Laufwerksausfall direkt reparieren kann.
-    PhysicalDiskHealthBP = Die folgenden physischen Datenträger sind fehlerhaft oder ausgemustert: {0}. Ersetzen Sie ausgefallene Datenträger und prüfen Sie die Speicheraufträge.
-    VirtualDiskHealthBP = Die folgenden virtuellen Datenträger sind nicht fehlerfrei: {0}. Prüfen Sie die Speicheraufträge und die physischen Datenträger; ein virtueller Datenträger mit verringerter Resilienz ist bis zum Abschluss der Reparatur gefährdet.
-    StorageJobsBP = Es laufen Speicheraufträge, zum Beispiel eine Reparatur oder ein Neuausgleich, nachdem ein Knoten oder Datenträger nicht verfügbar war. Nehmen Sie keine weiteren Knoten oder Datenträger offline, bis die Aufträge abgeschlossen sind.
-    HealthFaultsBP = Der Integritätsdienst meldet aktuelle Fehler. Befolgen Sie die empfohlenen Maßnahmen der Fehler (Get-HealthFault).
+    PoolHealthFinding = Der Speicherpool {0} ist nicht fehlerfrei.
+    PoolHealthBP = Prüfen Sie die physischen Datenträger und die Speicheraufträge des Pools.
+    ReserveCapacityFinding = Die nicht zugeordnete Kapazität des Speicherpools ({1}) liegt unter der empfohlenen Reserve von {0}.
+    ReserveCapacityBP = Lassen Sie die Kapazität eines Kapazitätslaufwerks je Knoten (bis zu vier Laufwerke) frei, damit der Pool nach einem Laufwerksausfall direkt reparieren kann.
+    PhysicalDiskHealthFinding = Die folgenden physischen Datenträger sind fehlerhaft oder ausgemustert: {0}.
+    PhysicalDiskHealthBP = Ersetzen Sie ausgefallene Datenträger und prüfen Sie die Speicheraufträge.
+    VirtualDiskHealthFinding = Die folgenden virtuellen Datenträger sind nicht fehlerfrei: {0}.
+    VirtualDiskHealthBP = Prüfen Sie die Speicheraufträge und die physischen Datenträger; ein virtueller Datenträger mit verringerter Resilienz ist bis zum Abschluss der Reparatur gefährdet.
+    StorageJobsFinding = Es laufen Speicheraufträge, zum Beispiel eine Reparatur oder ein Neuausgleich, nachdem ein Knoten oder Datenträger nicht verfügbar war.
+    StorageJobsBP = Nehmen Sie keine weiteren Knoten oder Datenträger offline, bis die Aufträge abgeschlossen sind.
+    HealthFaultsFinding = Der Integritätsdienst meldet aktuelle Fehler.
+    HealthFaultsBP = Befolgen Sie die empfohlenen Maßnahmen der Fehler (Get-HealthFault).
 '@
 
     # Get-AbrHvStorage3Tier
@@ -691,11 +727,16 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     PolicyLB = Geringste Blöcke
     ValueNotClaimed = Nicht von MPIO beansprucht
     HealthCheck = Integritätsprüfung:
-    MpioMissingBP = Multipfad-E/A ist auf den folgenden Hosts mit gemeinsam genutzten Datenträgern nicht installiert: {0}. Installieren Sie das Feature Multipfad-E/A und beanspruchen Sie den Speicher, damit ein ausgefallener Pfad den Speicherzugriff nicht unterbricht.
-    SinglePathBP = Die folgenden gemeinsam genutzten Datenträger haben weniger als zwei Pfade: {0}. Verbinden Sie jeden Host über mindestens zwei unabhängige Pfade mit dem Speicher und beanspruchen Sie die Datenträger mit MPIO.
-    IscsiNotConnectedBP = Die folgenden iSCSI-Sitzungen sind nicht verbunden: {0}. Prüfen Sie die Netzwerkverbindung zu den Zielportalen.
-    IscsiNotPersistentBP = Die folgenden iSCSI-Sitzungen sind nicht persistent und werden nach einem Neustart nicht wiederhergestellt: {0}. Verbinden Sie die Ziele als bevorzugte (persistente) Ziele.
-    ClusterDiskStateBP = Die folgenden Clusterdatenträger sind nicht online: {0}. Prüfen Sie die Speicheranbindung und die Clusterereignisse.
+    MpioMissingFinding = Multipfad-E/A ist auf den folgenden Hosts mit gemeinsam genutzten Datenträgern nicht installiert: {0}.
+    MpioMissingBP = Installieren Sie das Feature Multipfad-E/A und beanspruchen Sie den Speicher, damit ein ausgefallener Pfad den Speicherzugriff nicht unterbricht.
+    SinglePathFinding = Die folgenden gemeinsam genutzten Datenträger haben weniger als zwei Pfade: {0}.
+    SinglePathBP = Verbinden Sie jeden Host über mindestens zwei unabhängige Pfade mit dem Speicher und beanspruchen Sie die Datenträger mit MPIO.
+    IscsiNotConnectedFinding = Die folgenden iSCSI-Sitzungen sind nicht verbunden: {0}.
+    IscsiNotConnectedBP = Prüfen Sie die Netzwerkverbindung zu den Zielportalen.
+    IscsiNotPersistentFinding = Die folgenden iSCSI-Sitzungen sind nicht persistent und werden nach einem Neustart nicht wiederhergestellt: {0}.
+    IscsiNotPersistentBP = Verbinden Sie die Ziele als bevorzugte (persistente) Ziele.
+    ClusterDiskStateFinding = Die folgenden Clusterdatenträger sind nicht online: {0}.
+    ClusterDiskStateBP = Prüfen Sie die Speicheranbindung und die Clusterereignisse.
 '@
 
     # Get-AbrHvConsistency
@@ -756,7 +797,8 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     PrefixFirmware = Datenträgerfirmware
     PrefixIscsiTarget = iSCSI-Ziel
     HealthCheck = Integritätsprüfung:
-    ConsistencyBP = Die Konfiguration unterscheidet sich zwischen den Knoten in den folgenden Kategorien: {0}. Die Knoten eines Clusters sollten dieselben Updates, Treiber, Firmware und Einstellungen verwenden, damit sich Rollen nach einem Failover oder einer Livemigration auf jedem Knoten gleich verhalten.
+    ConsistencyFinding = Die Konfiguration unterscheidet sich zwischen den Knoten in den folgenden Kategorien: {0}.
+    ConsistencyBP = Die Knoten eines Clusters sollten dieselben Updates, Treiber, Firmware und Einstellungen verwenden, damit sich Rollen nach einem Failover oder einer Livemigration auf jedem Knoten gleich verhalten.
 '@
 
     # Get-AbrHvVirtualMachine
@@ -809,10 +851,28 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueMemoryRange = {0} bis {1}
     ValueDynamicMac = Dynamisch
     HealthCheck = Integritätsprüfung:
-    CheckpointsBP = Die folgenden virtuellen Computer haben Prüfpunkte: {0}. Prüfpunkte ersetzen keine Sicherung; führen Sie nicht mehr benötigte Prüfpunkte zusammen, da sie wachsen und den Datenträgerzugriff verlangsamen.
-    NotClusteredBP = Die folgenden virtuellen Computer laufen auf einem Clusterknoten, sind aber keine Clusterrollen: {0}. Machen Sie sie hochverfügbar oder dokumentieren Sie, warum sie auf einem Knoten bleiben.
-    ConfigurationVersionBP = Die Konfigurationsversion der folgenden virtuellen Computer ist niedriger als die Standardversion ihres Hosts: {0}. Aktualisieren Sie die Konfigurationsversion, sobald alle Knoten das neue Betriebssystem verwenden, um die aktuellen Hyper-V-Funktionen zu nutzen.
-    NetworkDisconnectedBP = Die folgenden virtuellen Computer haben Netzwerkadapter, die mit keinem virtuellen Switch verbunden sind: {0}.
+    CheckpointsFinding = Die folgenden virtuellen Computer haben Prüfpunkte: {0}.
+    CheckpointsBP = Prüfpunkte ersetzen keine Sicherung; führen Sie nicht mehr benötigte Prüfpunkte zusammen, da sie wachsen und den Datenträgerzugriff verlangsamen.
+    NotClusteredFinding = Die folgenden virtuellen Computer laufen auf einem Clusterknoten, sind aber keine Clusterrollen: {0}.
+    NotClusteredBP = Machen Sie sie hochverfügbar oder dokumentieren Sie, warum sie auf einem Knoten bleiben.
+    ConfigurationVersionFinding = Die Konfigurationsversion der folgenden virtuellen Computer ist niedriger als die Standardversion ihres Hosts: {0}.
+    ConfigurationVersionBP = Aktualisieren Sie die Konfigurationsversion, sobald alle Knoten das neue Betriebssystem verwenden, um die aktuellen Hyper-V-Funktionen zu nutzen.
+    NetworkDisconnectedFinding = Die folgenden virtuellen Computer haben Netzwerkadapter, die mit keinem virtuellen Switch verbunden sind: {0}.
+    NetworkDisconnectedBP = Verbinden Sie die Adapter mit einem virtuellen Switch oder entfernen Sie nicht benötigte Adapter.
+'@
+
+    # Get-AbrHvHealthCheckSummary
+    GetAbrHvHealthCheckSummary = ConvertFrom-StringData @'
+    Heading = Zusammenfassung der Integritätsprüfungen
+    ParagraphSummary = Die folgende Tabelle listet alle Befunde der Integritätsprüfungen von {0} auf: {1} Befund(e), davon {2} kritisch und {3} Warnung(en). Die Abschnitte oben enthalten die Details.
+    NoFindings = Die aktivierten Integritätsprüfungen haben für {0} keine Probleme gefunden.
+    TableSummary = Zusammenfassung der Integritätsprüfungen
+    Area = Bereich
+    Severity = Schweregrad
+    Finding = Befund
+    Recommendation = Empfehlung
+    SeverityCritical = Kritisch
+    SeverityWarning = Warnung
 '@
 
 }

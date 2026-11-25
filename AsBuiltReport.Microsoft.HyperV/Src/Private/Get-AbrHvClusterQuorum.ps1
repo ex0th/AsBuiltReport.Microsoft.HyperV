@@ -190,23 +190,20 @@
                             BlankLine
                             if ($ShowWitnessCheck) {
                                 if ($Findings -contains 'NoWitnessTwoNodes') {
-                                    Paragraph $LocalizedData.NoWitnessTwoNodesBP
+                                    Write-HvHealthCheck -Area $LocalizedData.Heading -Severity Critical -Finding $LocalizedData.NoWitnessTwoNodesFinding -Recommendation $LocalizedData.NoWitnessTwoNodesBP
                                 } else {
-                                    Paragraph $LocalizedData.NoWitnessBP
+                                    Write-HvHealthCheck -Area $LocalizedData.Heading -Finding $LocalizedData.NoWitnessFinding -Recommendation $LocalizedData.NoWitnessBP
                                 }
                                 BlankLine
                             }
                             if ($ShowWitnessStateCheck) {
-                                Paragraph ($LocalizedData.WitnessStateBP -f $QuorumData.WitnessName, $QuorumData.WitnessState)
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity Critical -Finding ($LocalizedData.WitnessStateFinding -f $QuorumData.WitnessName, $QuorumData.WitnessState) -Recommendation $LocalizedData.WitnessStateBP
                             }
                             if ($ShowWitnessLocationCheck) {
-                                Paragraph ($LocalizedData.WitnessLocationBP -f $QuorumData.WitnessTarget, $WitnessVm)
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity Critical -Finding ($LocalizedData.WitnessLocationFinding -f $QuorumData.WitnessTarget, $WitnessVm) -Recommendation $LocalizedData.WitnessLocationBP
                             }
                             if ($ShowDynamicQuorumCheck) {
-                                Paragraph $LocalizedData.DynamicQuorumBP
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding $LocalizedData.DynamicQuorumFinding -Recommendation $LocalizedData.DynamicQuorumBP
                             }
                         }
                     }

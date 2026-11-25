@@ -1800,6 +1800,71 @@ function ConvertTo-HvPercent {
     [string]::Format($Culture, '{0} %', [math]::Round([double]$Value, $Decimals))
 }
 
+function Get-HvMaxSeverity {
+    <#
+    .SYNOPSIS
+        Returns Critical if any of the given severities is Critical, otherwise Warning.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(Position = 0)]
+        [AllowEmptyCollection()]
+        [AllowNull()]
+        [String[]] $Severity
+    )
+
+    if (@($Severity) -contains 'Critical') {
+        return 'Critical'
+    }
+    'Warning'
+}
+
+function Write-HvHealthCheck {
+    <#
+    .SYNOPSIS
+        Writes the text of a health check finding and records it for the Health Check Summary.
+    .DESCRIPTION
+        Outputs a paragraph with finding and recommendation (and a blank line) for the section, and adds the
+        finding to $HvHealthFindings, which the Health Check Summary at the end of the report lists.
+        Area is the heading of the section that reports the finding.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [String] $Area,
+
+        [ValidateSet('Critical', 'Warning')]
+        [String] $Severity = 'Warning',
+
+        [Parameter(Mandatory)]
+        [String] $Finding,
+
+        [AllowEmptyString()]
+        [String] $Recommendation = ''
+    )
+
+    $Findings = Get-Variable -Name 'HvHealthFindings' -Scope Script -ValueOnly -ErrorAction SilentlyContinue
+    if ($null -ne $Findings) {
+        $Findings.Add([PSCustomObject]@{
+                Area = $Area
+                Severity = $Severity
+                Finding = $Finding
+                Recommendation = $Recommendation
+            })
+    }
+    Paragraph ((@($Finding, $Recommendation) | Where-Object { $_ }) -join ' ')
+    BlankLine
+}
+
 function ConvertTo-HvDisplayValue {
     <#
     .SYNOPSIS

@@ -394,12 +394,10 @@
                                 Paragraph $LocalizedData.HealthCheck -Bold -Underline
                                 BlankLine
                                 if ($PoolUnhealthy) {
-                                    Paragraph ($LocalizedData.PoolHealthBP -f $PoolItem.Pool.Name)
-                                    BlankLine
+                                    Write-HvHealthCheck -Area $LocalizedData.Heading -Severity $PoolItem.Severity -Finding ($LocalizedData.PoolHealthFinding -f $PoolItem.Pool.Name) -Recommendation $LocalizedData.PoolHealthBP
                                 }
                                 if ($PoolReserve) {
-                                    Paragraph ($LocalizedData.ReserveCapacityBP -f (ConvertTo-HvSize $PoolItem.Reserve.ReserveBytes), (ConvertTo-HvSize $PoolItem.Reserve.FreeBytes))
-                                    BlankLine
+                                    Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.ReserveCapacityFinding -f (ConvertTo-HvSize $PoolItem.Reserve.ReserveBytes), (ConvertTo-HvSize $PoolItem.Reserve.FreeBytes)) -Recommendation $LocalizedData.ReserveCapacityBP
                                 }
                             }
                         }
@@ -435,10 +433,9 @@
                             if ($ShowDiskCheck) {
                                 Paragraph $LocalizedData.HealthCheck -Bold -Underline
                                 BlankLine
-                                Paragraph ($LocalizedData.PhysicalDiskHealthBP -f (($UnhealthyDisks | ForEach-Object {
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.PhysicalDiskHealthFinding -f (($UnhealthyDisks | ForEach-Object {
                                                 '{0} ({1})' -f $_.SerialNumber, $_.Node
-                                            }) -join ', '))
-                                BlankLine
+                                            }) -join ', ')) -Recommendation $LocalizedData.PhysicalDiskHealthBP
                             }
                         }
                     }
@@ -473,8 +470,7 @@
                             if ($ShowVirtualDiskCheck) {
                                 Paragraph $LocalizedData.HealthCheck -Bold -Underline
                                 BlankLine
-                                Paragraph ($LocalizedData.VirtualDiskHealthBP -f (($UnhealthyVirtualDisks | ForEach-Object { $_.Name }) -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity (Get-HvMaxSeverity @($UnhealthyVirtualDisks | ForEach-Object { ConvertTo-HvHealthSeverity $_.HealthStatus })) -Finding ($LocalizedData.VirtualDiskHealthFinding -f (($UnhealthyVirtualDisks | ForEach-Object { $_.Name }) -join ', ')) -Recommendation $LocalizedData.VirtualDiskHealthBP
                             }
                         }
                     }
@@ -509,8 +505,7 @@
                             if ($ShowJobCheck) {
                                 Paragraph $LocalizedData.HealthCheck -Bold -Underline
                                 BlankLine
-                                Paragraph $LocalizedData.StorageJobsBP
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding $LocalizedData.StorageJobsFinding -Recommendation $LocalizedData.StorageJobsBP
                             }
                         }
                     }
@@ -531,8 +526,7 @@
                             if ($ShowFaultCheck) {
                                 Paragraph $LocalizedData.HealthCheck -Bold -Underline
                                 BlankLine
-                                Paragraph $LocalizedData.HealthFaultsBP
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity (Get-HvMaxSeverity @($Faults | ForEach-Object { ConvertTo-HvFaultSeverity $_.Severity })) -Finding $LocalizedData.HealthFaultsFinding -Recommendation $LocalizedData.HealthFaultsBP
                             }
                         }
                     }

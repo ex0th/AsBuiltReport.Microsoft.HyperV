@@ -313,6 +313,9 @@ PS C:\> New-AsBuiltReport -Report Microsoft.HyperV -Target 'hv01.example.com','c
 
 The report follows the PScribo conventions used across AsBuiltReport modules, so exported documents can be processed by other tools:
 
+- With `-EnableHealthCheck`, the last section of every cluster or host is the `Health Check Summary` with one row per finding and the columns `Area`, `Severity`, `Finding` and `Recommendation` (translated in other report languages). The sections contain the same findings below the tables they highlight.
+- Tables that describe hosts have a `Host` or `Node` column with the node names as listed in `Cluster Nodes`.
+
 - All headings are numbered. Sections are never excluded from the table of contents.
 - Every table has a caption in the format `Table <n> - <Section> - <Object>`, for example `Table 3 - Cluster Nodes - CLU01`.
 - List tables contain a single object, because PScribo removes captions from list tables with more than one row.

@@ -102,12 +102,10 @@
                         Paragraph $LocalizedData.HealthCheck -Bold -Underline
                         BlankLine
                         if ($ShowReachabilityCheck) {
-                            Paragraph $LocalizedData.NodeReachabilityBP
-                            BlankLine
+                            Write-HvHealthCheck -Area $LocalizedData.Heading -Severity Critical -Finding $LocalizedData.NodeReachabilityFinding -Recommendation $LocalizedData.NodeReachabilityBP
                         }
                         if ($ShowHyperVRoleCheck) {
-                            Paragraph ($LocalizedData.HyperVRoleBP -f ($NodesWithoutHyperV -join ', '))
-                            BlankLine
+                            Write-HvHealthCheck -Area $LocalizedData.Heading -Severity Critical -Finding ($LocalizedData.HyperVRoleFinding -f ($NodesWithoutHyperV -join ', ')) -Recommendation $LocalizedData.HyperVRoleBP
                         }
                     }
 

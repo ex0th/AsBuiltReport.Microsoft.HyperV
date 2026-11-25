@@ -232,12 +232,10 @@
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline
                             BlankLine
                             if ($ShowNodeStateCheck) {
-                                Paragraph ($LocalizedData.NodeStateBP -f (($NodesNotUp | ForEach-Object { $_.$($LocalizedData.NodeName) }) -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity (Get-HvMaxSeverity @($NodesNotUp | ForEach-Object { if ($_.$($LocalizedData.State) -eq 'Down') { 'Critical' } })) -Finding ($LocalizedData.NodeStateFinding -f (($NodesNotUp | ForEach-Object { $_.$($LocalizedData.NodeName) }) -join ', ')) -Recommendation $LocalizedData.NodeStateBP
                             }
                             if ($ShowBuildCheck) {
-                                Paragraph ($LocalizedData.NodeBuildBP -f (($NodesOtherBuild | ForEach-Object { $_.$($LocalizedData.NodeName) }) -join ', '), $ReferenceBuild)
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.NodeBuildFinding -f (($NodesOtherBuild | ForEach-Object { $_.$($LocalizedData.NodeName) }) -join ', '), $ReferenceBuild) -Recommendation $LocalizedData.NodeBuildBP
                             }
                         }
                     }

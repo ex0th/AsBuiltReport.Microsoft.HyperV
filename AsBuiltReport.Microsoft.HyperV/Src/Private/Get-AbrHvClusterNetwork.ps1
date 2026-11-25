@@ -176,12 +176,10 @@
                             if ($ShowStateCheck) {
                                 $Affected = @($NetworksNotUp | ForEach-Object { $_.$($LocalizedData.NetworkName) }) +
                                     @($InterfacesNotUp | ForEach-Object { '{0} ({1})' -f $_.$($LocalizedData.Network), $_.$($LocalizedData.Node) })
-                                Paragraph ($LocalizedData.NetworkStateBP -f ($Affected -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity (Get-HvMaxSeverity (@($NetworksNotUp | ForEach-Object { $NetworkSeverity[$_.$($LocalizedData.NetworkName)] }) + @($InterfacesNotUp | ForEach-Object { if ($_.$($LocalizedData.State) -eq 'Failed') { 'Critical' } }))) -Finding ($LocalizedData.NetworkStateFinding -f ($Affected -join ', ')) -Recommendation $LocalizedData.NetworkStateBP
                             }
                             if ($ShowRedundancyCheck) {
-                                Paragraph ($LocalizedData.NetworkRedundancyBP -f $NetworkState.ClusterNetworkCount)
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.NetworkRedundancyFinding -f $NetworkState.ClusterNetworkCount) -Recommendation $LocalizedData.NetworkRedundancyBP
                             }
                         }
                     }

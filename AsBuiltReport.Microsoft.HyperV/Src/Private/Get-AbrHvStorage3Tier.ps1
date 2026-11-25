@@ -310,12 +310,10 @@
                                 Paragraph $LocalizedData.HealthCheck -Bold -Underline
                                 BlankLine
                                 if (@($SessionFindings | Where-Object { $_.Check -eq 'IscsiNotConnected' }).Count -gt 0) {
-                                    Paragraph ($LocalizedData.IscsiNotConnectedBP -f (& $FindingList 'IscsiNotConnected'))
-                                    BlankLine
+                                    Write-HvHealthCheck -Area $LocalizedData.Heading -Severity Critical -Finding ($LocalizedData.IscsiNotConnectedFinding -f (& $FindingList 'IscsiNotConnected')) -Recommendation $LocalizedData.IscsiNotConnectedBP
                                 }
                                 if (@($SessionFindings | Where-Object { $_.Check -eq 'IscsiNotPersistent' }).Count -gt 0) {
-                                    Paragraph ($LocalizedData.IscsiNotPersistentBP -f (& $FindingList 'IscsiNotPersistent'))
-                                    BlankLine
+                                    Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.IscsiNotPersistentFinding -f (& $FindingList 'IscsiNotPersistent')) -Recommendation $LocalizedData.IscsiNotPersistentBP
                                 }
                             }
                             if ($PortalObj.Count -gt 0) {
@@ -383,12 +381,10 @@
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline
                             BlankLine
                             if (@($PathFindings | Where-Object { $_.Check -eq 'MpioMissing' }).Count -gt 0) {
-                                Paragraph ($LocalizedData.MpioMissingBP -f (& $FindingList 'MpioMissing'))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.MpioMissingFinding -f (& $FindingList 'MpioMissing')) -Recommendation $LocalizedData.MpioMissingBP
                             }
                             if (@($PathFindings | Where-Object { $_.Check -eq 'SinglePath' }).Count -gt 0) {
-                                Paragraph ($LocalizedData.SinglePathBP -f (& $FindingList 'SinglePath'))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.SinglePathFinding -f (& $FindingList 'SinglePath')) -Recommendation $LocalizedData.SinglePathBP
                             }
                         }
                     }
@@ -407,8 +403,7 @@
                             if ($ShowClusterDiskCheck) {
                                 Paragraph $LocalizedData.HealthCheck -Bold -Underline
                                 BlankLine
-                                Paragraph ($LocalizedData.ClusterDiskStateBP -f (($DiskIssues | ForEach-Object { $_.Name }) -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity (Get-HvMaxSeverity @($DiskIssues | ForEach-Object { ConvertTo-HvResourceSeverity $_.State })) -Finding ($LocalizedData.ClusterDiskStateFinding -f (($DiskIssues | ForEach-Object { $_.Name }) -join ', ')) -Recommendation $LocalizedData.ClusterDiskStateBP
                             }
                         }
                     }

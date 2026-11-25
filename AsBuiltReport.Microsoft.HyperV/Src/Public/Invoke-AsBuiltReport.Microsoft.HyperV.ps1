@@ -70,6 +70,8 @@
         $script:HvNodeFacts = @()
         $script:HvEnvironment = $null
         $script:HvObjectName = $null
+        # Health check findings of this target, listed in the Health Check Summary.
+        $script:HvHealthFindings = New-Object -TypeName System.Collections.Generic.List[Object]
 
         try {
             Write-PScriboMessage ($LocalizedData.Connecting -f $System)
@@ -179,6 +181,9 @@
 
                 # Optional virtual machine inventory (InfoLevel 0 by default)
                 Get-AbrHvVirtualMachine
+
+                # Every health check finding of the sections above as one table (health checks enabled only)
+                Get-AbrHvHealthCheckSummary
 
                 # Planned sections (see README roadmap):
                 # Storage: SMB shares, SMB Multichannel, SMB Direct

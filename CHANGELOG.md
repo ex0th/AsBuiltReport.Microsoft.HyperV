@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health checks for failed or partially online roles, Cluster Shared Volumes that are not online, use redirected I/O (ReFS is expected and ignored) or run out of free space, a missing or offline CAU self-updating role and a failed last CAU run
 - Detection evidence for the Hyper-V role per host, physical disk resources, Cluster Shared Volumes, Scale-Out File Server roles and SMB shares that hold virtual hard disks
 - Readable values for the cluster functional level and the auto balancer mode and level
+- `Health Check Summary` at the end of every cluster or host with all health check findings (area, severity, finding, recommendation) in one table; finding and recommendation are separate texts in the language files
 - en-US and de-DE language files; fixed wording in the detection evidence is translated as well
 - PowerShell 7 support on Windows (Windows PowerShell 5.1 remains supported); PSScriptAnalyzer checks the syntax for both versions
 - Pester tests for the environment classification, report configuration, report conventions and localization data

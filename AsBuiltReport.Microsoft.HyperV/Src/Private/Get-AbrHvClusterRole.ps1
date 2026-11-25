@@ -159,8 +159,7 @@
                         if ($ShowStateCheck) {
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline
                             BlankLine
-                            Paragraph ($LocalizedData.RoleStateBP -f (($UnhealthyRoles | ForEach-Object { $_.Name }) -join ', '))
-                            BlankLine
+                            Write-HvHealthCheck -Area $LocalizedData.Heading -Severity (Get-HvMaxSeverity @($UnhealthyRoles | ForEach-Object { $_.StateSeverity })) -Finding ($LocalizedData.RoleStateFinding -f (($UnhealthyRoles | ForEach-Object { $_.Name }) -join ', ')) -Recommendation $LocalizedData.RoleStateBP
                         }
 
                         if ($InfoLevel.Cluster -ge 2) {

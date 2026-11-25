@@ -219,8 +219,7 @@
                             if ($ShowNetworkCheck) {
                                 Paragraph $LocalizedData.HealthCheck -Bold -Underline
                                 BlankLine
-                                Paragraph $LocalizedData.MigrationNetworkBP
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Severity Critical -Finding $LocalizedData.MigrationNetworkFinding -Recommendation $LocalizedData.MigrationNetworkBP
                             }
                         }
                     }
@@ -259,14 +258,12 @@
                             Paragraph $LocalizedData.HealthCheck -Bold -Underline
                             BlankLine
                             if ($ShowEnabledCheck) {
-                                Paragraph ($LocalizedData.HostMigrationEnabledBP -f ($HostsDisabled -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.HostMigrationEnabledFinding -f ($HostsDisabled -join ', ')) -Recommendation $LocalizedData.HostMigrationEnabledBP
                             }
                             if ($ShowConsistencyCheck) {
                                 $Settings = @($Deviations | ForEach-Object { $CompareMap[$_.Property] } | Select-Object -Unique)
                                 $Hosts = @($Deviations | ForEach-Object { $_.Name } | Sort-Object -Unique)
-                                Paragraph ($LocalizedData.SettingsConsistencyBP -f ($Settings -join ', '), ($Hosts -join ', '))
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding ($LocalizedData.SettingsConsistencyFinding -f ($Settings -join ', '), ($Hosts -join ', ')) -Recommendation $LocalizedData.SettingsConsistencyBP
                             }
                         }
                     }

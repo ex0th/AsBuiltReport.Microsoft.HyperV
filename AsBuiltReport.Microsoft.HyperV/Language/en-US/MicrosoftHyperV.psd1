@@ -97,8 +97,10 @@ GetAbrHvEnvironmentType = ConvertFrom-StringData @'
     ValueVhdLocation = SMB {0}, CSV {1}, Local {2}
     ValueOverride = {0} (automatic: {1})
     HealthCheck = Health Check:
-    NodeReachabilityBP = Not all hosts could be reached. Sections that depend on per-host data are incomplete. Check WinRM connectivity and name resolution for the missing nodes.
-    HyperVRoleBP = The Hyper-V role is not installed on the following hosts: {0}. Every host that runs virtual machines needs the Hyper-V role, and all nodes of a cluster should provide the same roles.
+    NodeReachabilityFinding = Not all hosts could be reached. Sections that depend on per-host data are incomplete.
+    NodeReachabilityBP = Check WinRM connectivity and name resolution for the missing nodes.
+    HyperVRoleFinding = The Hyper-V role is not installed on the following hosts: {0}.
+    HyperVRoleBP = Every host that runs virtual machines needs the Hyper-V role, and all nodes of a cluster should provide the same roles.
 '@
 
 # Get-AbrHvClusterOverview
@@ -158,8 +160,10 @@ GetAbrHvClusterOverview = ConvertFrom-StringData @'
     OSVersion = Operating System
     SerialNumber = Serial Number
     HealthCheck = Health Check:
-    NodeStateBP = The following nodes are not in the Up state: {0}. Nodes that are down or paused reduce the failover capacity of the cluster.
-    NodeBuildBP = The following nodes run a different OS build than the rest of the cluster ({1}): {0}. Keep all nodes on the same cumulative update.
+    NodeStateFinding = The following nodes are not in the Up state: {0}. Nodes that are down or paused reduce the failover capacity of the cluster.
+    NodeStateBP = Resume paused nodes and bring nodes that are down back online, or document why they are not available.
+    NodeBuildFinding = The following nodes run a different OS build than the rest of the cluster ({1}): {0}.
+    NodeBuildBP = Keep all nodes on the same cumulative update.
 '@
 
 # Get-AbrHvClusterQuorum
@@ -200,11 +204,16 @@ GetAbrHvClusterQuorum = ConvertFrom-StringData @'
     AssignedVote = Assigned Vote
     CurrentVote = Current Vote
     HealthCheck = Health Check:
-    NoWitnessTwoNodesBP = The cluster has two voting nodes and no witness. Dynamic quorum removes the vote from one node, so the cluster goes offline if the node that holds the remaining vote fails unexpectedly. Configure a cloud, file share or disk witness.
-    NoWitnessBP = No quorum witness is configured. Microsoft recommends a witness for every cluster, because dynamic witness keeps the total number of votes odd. Configure a cloud, file share or disk witness.
-    WitnessStateBP = The witness resource '{0}' is in the state {1}. While the witness is not online, its vote does not count and the cluster tolerates fewer failures.
-    DynamicQuorumBP = Dynamic quorum is disabled. With dynamic quorum, the cluster adjusts the votes when nodes fail and can survive the sequential failure of all but one node. Enable dynamic quorum unless there is a specific reason not to.
-    WitnessLocationBP = The file share witness {0} is hosted by the virtual machine {1}, which runs on this cluster. If the cluster loses nodes, the witness can fail together with them and cannot provide the deciding vote. Place the witness outside the cluster, for example on another server or as cloud witness.
+    NoWitnessTwoNodesFinding = The cluster has two voting nodes and no witness. Dynamic quorum removes the vote from one node, so the cluster goes offline if the node that holds the remaining vote fails unexpectedly.
+    NoWitnessTwoNodesBP = Configure a cloud, file share or disk witness.
+    NoWitnessFinding = No quorum witness is configured. Microsoft recommends a witness for every cluster, because dynamic witness keeps the total number of votes odd.
+    NoWitnessBP = Configure a cloud, file share or disk witness.
+    WitnessStateFinding = The witness resource '{0}' is in the state {1}. While the witness is not online, its vote does not count and the cluster tolerates fewer failures.
+    WitnessStateBP = Check the witness resource and its target (disk, file share or storage account) and bring the witness online.
+    DynamicQuorumFinding = Dynamic quorum is disabled. With dynamic quorum, the cluster adjusts the votes when nodes fail and can survive the sequential failure of all but one node.
+    DynamicQuorumBP = Enable dynamic quorum unless there is a specific reason not to.
+    WitnessLocationFinding = The file share witness {0} is hosted by the virtual machine {1}, which runs on this cluster. If the cluster loses nodes, the witness can fail together with them and cannot provide the deciding vote.
+    WitnessLocationBP = Place the witness outside the cluster, for example on another server or as cloud witness.
     WitnessVmFailed = Unable to read the virtual machines of '{0}' for the witness check: {1}
 '@
 
@@ -239,8 +248,10 @@ GetAbrHvClusterNetwork = ConvertFrom-StringData @'
     RoleClientOnly = Client only
     RoleClusterAndClient = Cluster and client
     HealthCheck = Health Check:
-    NetworkStateBP = The following cluster networks or network interfaces are not up: {0}. Check the physical links, switch ports and IP configuration of the affected adapters.
-    NetworkRedundancyBP = The cluster has {0} network(s) for cluster communication in the Up state. With a single network, a failure of that network isolates the nodes from each other. Configure at least two networks that allow cluster communication.
+    NetworkStateFinding = The following cluster networks or network interfaces are not up: {0}.
+    NetworkStateBP = Check the physical links, switch ports and IP configuration of the affected adapters.
+    NetworkRedundancyFinding = The cluster has {0} network(s) for cluster communication in the Up state. With a single network, a failure of that network isolates the nodes from each other.
+    NetworkRedundancyBP = Configure at least two networks that allow cluster communication.
 '@
 
 # Get-AbrHvLiveMigration
@@ -278,9 +289,12 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueNoLimit = No limit
     ValueMbps = {0} Mbit/s
     HealthCheck = Health Check:
-    MigrationNetworkBP = Every cluster network is excluded from live migration, so clustered virtual machines cannot be live migrated. Allow at least one network, preferably a dedicated network, in the live migration settings of the cluster.
-    HostMigrationEnabledBP = Incoming and outgoing live migrations are disabled in the Hyper-V settings of the following hosts: {0}. Enable live migration if these hosts should move running virtual machines.
-    SettingsConsistencyBP = The following live migration settings differ between hosts: {0} (hosts: {1}). Use the same settings on all hosts so that migrations behave the same in every direction.
+    MigrationNetworkFinding = Every cluster network is excluded from live migration, so clustered virtual machines cannot be live migrated.
+    MigrationNetworkBP = Allow at least one network, preferably a dedicated network, in the live migration settings of the cluster.
+    HostMigrationEnabledFinding = Incoming and outgoing live migrations are disabled in the Hyper-V settings of the following hosts: {0}.
+    HostMigrationEnabledBP = Enable live migration if these hosts should move running virtual machines.
+    SettingsConsistencyFinding = The following live migration settings differ between hosts: {0} (hosts: {1}).
+    SettingsConsistencyBP = Use the same settings on all hosts so that migrations behave the same in every direction.
 '@
 
     # Get-AbrHvClusterRole
@@ -330,7 +344,8 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     FailbackImmediately = Allow, immediately
     FailbackWindow = Allow, between {0}:00 and {1}:00
     HealthCheck = Health Check:
-    RoleStateBP = The following roles failed or are not completely online: {0}. Check the resources of these roles in Failover Cluster Manager and the cluster events.
+    RoleStateFinding = The following roles failed or are not completely online: {0}.
+    RoleStateBP = Check the resources of these roles in Failover Cluster Manager and the cluster events.
 '@
 
     # Get-AbrHvClusterSharedVolume
@@ -366,9 +381,12 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueDisabled = Disabled
     ValueMB = {0} MB
     HealthCheck = Health Check:
-    CsvStateBP = The following Cluster Shared Volumes are not online or in maintenance mode: {0}. Virtual machines on these volumes may not be available.
-    CsvRedirectedAccessBP = The following Cluster Shared Volumes use redirected I/O on at least one node for a reason other than ReFS: {0}. Redirected I/O sends the traffic over the cluster network and reduces performance. Check the storage connectivity of these nodes.
-    CsvFreeSpaceBP = The following Cluster Shared Volumes have less than 20 % free space (critical below 10 %): {0}. Keep enough free space for virtual hard disk growth, checkpoints and memory dumps.
+    CsvStateFinding = The following Cluster Shared Volumes are not online or in maintenance mode: {0}. Virtual machines on these volumes may not be available.
+    CsvStateBP = Bring the volumes online or end the maintenance mode after the maintenance has finished.
+    CsvRedirectedAccessFinding = The following Cluster Shared Volumes use redirected I/O on at least one node for a reason other than ReFS: {0}. Redirected I/O sends the traffic over the cluster network and reduces performance.
+    CsvRedirectedAccessBP = Check the storage connectivity of these nodes.
+    CsvFreeSpaceFinding = The following Cluster Shared Volumes have less than 20 % free space (critical below 10 %): {0}.
+    CsvFreeSpaceBP = Keep enough free space for virtual hard disk growth, checkpoints and memory dumps.
 '@
 
     # Get-AbrHvClusterAwareUpdating
@@ -405,9 +423,12 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ScheduleInterval = {0}, every {1} weeks
     ValueNoRun = No run recorded
     HealthCheck = Health Check:
-    NoSelfUpdatingRoleBP = The cluster has no Cluster-Aware Updating self-updating role. Make sure the nodes are updated in a coordinated way, either with the CAU self-updating role or with remote updating runs.
-    SelfUpdatingOfflineBP = The Cluster-Aware Updating self-updating role is not online, so scheduled updating runs do not start. Enable the role if the cluster should update itself.
-    LastRunBP = The last Cluster-Aware Updating run did not succeed. Check the updating run report for the nodes that failed.
+    NoSelfUpdatingRoleFinding = The cluster has no Cluster-Aware Updating self-updating role.
+    NoSelfUpdatingRoleBP = Make sure the nodes are updated in a coordinated way, either with the CAU self-updating role or with remote updating runs.
+    SelfUpdatingOfflineFinding = The Cluster-Aware Updating self-updating role is not online, so scheduled updating runs do not start.
+    SelfUpdatingOfflineBP = Enable the role if the cluster should update itself.
+    LastRunFinding = The last Cluster-Aware Updating run did not succeed.
+    LastRunBP = Check the updating run report for the nodes that failed.
 '@
 
     # Get-AbrHvHost
@@ -473,8 +494,10 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueNotPresent = Not present
     ValueNone = None
     HealthCheck = Health Check:
-    SchedulerTypeBP = The following hosts use the classic hypervisor scheduler with simultaneous multithreading (SMT): {0}. With the classic scheduler, virtual processors of different virtual machines can share a processor core. Use the core scheduler, the default since Windows Server 2019.
-    SecureBootBP = Secure Boot is disabled on the following hosts: {0}. Enable Secure Boot in the UEFI firmware to protect the boot process of the hypervisor.
+    SchedulerTypeFinding = The following hosts use the classic hypervisor scheduler with simultaneous multithreading (SMT): {0}. With the classic scheduler, virtual processors of different virtual machines can share a processor core.
+    SchedulerTypeBP = Use the core scheduler, the default since Windows Server 2019.
+    SecureBootFinding = Secure Boot is disabled on the following hosts: {0}.
+    SecureBootBP = Enable Secure Boot in the UEFI firmware to protect the boot process of the hypervisor.
 '@
 
     # Get-AbrHvNetworking
@@ -535,13 +558,20 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueTrafficClassStrict = {0}: priority {1}, strict priority
     ValuePolicy = {0}: priority {1}
     HealthCheck = Health Check:
-    SetLoadBalancingBP = The following SET switches do not use the Hyper-V port load balancing algorithm: {0}. Hyper-V port is the recommended algorithm for Switch Embedded Teaming.
-    RdmaStateBP = RDMA is disabled on the following RDMA capable adapters that carry storage traffic between the nodes (cluster networks or SET members below RDMA host vNICs): {0}. Storage Spaces Direct uses RDMA (SMB Direct) for this traffic. Enable RDMA on these adapters.
-    NoStorageRdmaBP = The following Storage Spaces Direct hosts have no adapter with RDMA enabled on a cluster network: {0}. The storage traffic between the nodes uses TCP, which needs more CPU and has a higher latency. Use RDMA capable adapters for the storage networks.
-    DcbTrafficClassBP = Priority flow control and a QoS policy exist, but no ETS traffic class reserves bandwidth for the following traffic: {0}. Create an ETS traffic class for the SMB priority and for the cluster heartbeat priority, so that storage and cluster traffic keep their bandwidth under load.
-    RocePfcBP = The following RoCE adapters use RDMA without priority flow control (PFC) or with DCB disabled on the adapter: {0}. RoCE requires a lossless network; configure PFC for the SMB Direct priority on the hosts and the switches.
-    DcbxWillingBP = The following hosts accept DCB settings from the network switch (DCBX willing): {0}. Windows Server does not support DCBX; set the willing mode to false so that the host keeps its own configuration.
-    VnicTeamMappingBP = The following RDMA host vNICs on SET switches with several members are not mapped to a physical adapter: {0}. Map every RDMA vNIC to a physical adapter of the team so that the SMB Direct traffic is spread across the adapters.
+    SetLoadBalancingFinding = The following SET switches do not use the Hyper-V port load balancing algorithm: {0}.
+    SetLoadBalancingBP = Hyper-V port is the recommended algorithm for Switch Embedded Teaming.
+    RdmaStateFinding = RDMA is disabled on the following RDMA capable adapters that carry storage traffic between the nodes (cluster networks or SET members below RDMA host vNICs): {0}. Storage Spaces Direct uses RDMA (SMB Direct) for this traffic.
+    RdmaStateBP = Enable RDMA on these adapters.
+    NoStorageRdmaFinding = The following Storage Spaces Direct hosts have no adapter with RDMA enabled on a cluster network: {0}. The storage traffic between the nodes uses TCP, which needs more CPU and has a higher latency.
+    NoStorageRdmaBP = Use RDMA capable adapters for the storage networks.
+    DcbTrafficClassFinding = Priority flow control and a QoS policy exist, but no ETS traffic class reserves bandwidth for the following traffic: {0}.
+    DcbTrafficClassBP = Create an ETS traffic class for the SMB priority and for the cluster heartbeat priority, so that storage and cluster traffic keep their bandwidth under load.
+    RocePfcFinding = The following RoCE adapters use RDMA without priority flow control (PFC) or with DCB disabled on the adapter: {0}.
+    RocePfcBP = RoCE requires a lossless network; configure PFC for the SMB Direct priority on the hosts and the switches.
+    DcbxWillingFinding = The following hosts accept DCB settings from the network switch (DCBX willing): {0}.
+    DcbxWillingBP = Windows Server does not support DCBX; set the willing mode to false so that the host keeps its own configuration.
+    VnicTeamMappingFinding = The following RDMA host vNICs on SET switches with several members are not mapped to a physical adapter: {0}.
+    VnicTeamMappingBP = Map every RDMA vNIC to a physical adapter of the team so that the SMB Direct traffic is spread across the adapters.
 '@
 
     # Get-AbrHvStorageS2D
@@ -624,12 +654,18 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     FaultObject = Object
     FaultReason = Reason
     HealthCheck = Health Check:
-    PoolHealthBP = The storage pool {0} is not healthy. Check the physical disks and the storage jobs of the pool.
-    ReserveCapacityBP = The unallocated capacity of the storage pool ({1}) is below the recommended reserve of {0}. Keep the capacity of one capacity drive per node (up to four drives) unallocated, so that the pool can repair in place after a drive failure.
-    PhysicalDiskHealthBP = The following physical disks are not healthy or retired: {0}. Replace failed disks and check the storage jobs.
-    VirtualDiskHealthBP = The following virtual disks are not healthy: {0}. Check the storage jobs and the physical disks; a virtual disk with reduced resiliency is at risk until the repair has finished.
-    StorageJobsBP = Storage jobs are running, for example a repair or rebalance after a node or disk was unavailable. Do not take further nodes or disks offline until the jobs have finished.
-    HealthFaultsBP = The Health Service reports current faults. Follow the recommended actions of the faults (Get-HealthFault).
+    PoolHealthFinding = The storage pool {0} is not healthy.
+    PoolHealthBP = Check the physical disks and the storage jobs of the pool.
+    ReserveCapacityFinding = The unallocated capacity of the storage pool ({1}) is below the recommended reserve of {0}.
+    ReserveCapacityBP = Keep the capacity of one capacity drive per node (up to four drives) unallocated, so that the pool can repair in place after a drive failure.
+    PhysicalDiskHealthFinding = The following physical disks are not healthy or retired: {0}.
+    PhysicalDiskHealthBP = Replace failed disks and check the storage jobs.
+    VirtualDiskHealthFinding = The following virtual disks are not healthy: {0}.
+    VirtualDiskHealthBP = Check the storage jobs and the physical disks; a virtual disk with reduced resiliency is at risk until the repair has finished.
+    StorageJobsFinding = Storage jobs are running, for example a repair or rebalance after a node or disk was unavailable.
+    StorageJobsBP = Do not take further nodes or disks offline until the jobs have finished.
+    HealthFaultsFinding = The Health Service reports current faults.
+    HealthFaultsBP = Follow the recommended actions of the faults (Get-HealthFault).
 '@
 
     # Get-AbrHvStorage3Tier
@@ -690,11 +726,16 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     PolicyLB = Least Blocks
     ValueNotClaimed = Not claimed by MPIO
     HealthCheck = Health Check:
-    MpioMissingBP = Multipath I/O is not installed on the following hosts with shared disks: {0}. Install the Multipath I/O feature and claim the storage, so that a failed path does not interrupt the storage access.
-    SinglePathBP = The following shared disks have fewer than two paths: {0}. Connect every host over at least two independent paths to the storage and claim the disks with MPIO.
-    IscsiNotConnectedBP = The following iSCSI sessions are not connected: {0}. Check the network connection to the target portals.
-    IscsiNotPersistentBP = The following iSCSI sessions are not persistent and are not restored after a restart: {0}. Connect the targets as favorite (persistent) targets.
-    ClusterDiskStateBP = The following cluster disks are not online: {0}. Check the storage connectivity and the cluster events.
+    MpioMissingFinding = Multipath I/O is not installed on the following hosts with shared disks: {0}.
+    MpioMissingBP = Install the Multipath I/O feature and claim the storage, so that a failed path does not interrupt the storage access.
+    SinglePathFinding = The following shared disks have fewer than two paths: {0}.
+    SinglePathBP = Connect every host over at least two independent paths to the storage and claim the disks with MPIO.
+    IscsiNotConnectedFinding = The following iSCSI sessions are not connected: {0}.
+    IscsiNotConnectedBP = Check the network connection to the target portals.
+    IscsiNotPersistentFinding = The following iSCSI sessions are not persistent and are not restored after a restart: {0}.
+    IscsiNotPersistentBP = Connect the targets as favorite (persistent) targets.
+    ClusterDiskStateFinding = The following cluster disks are not online: {0}.
+    ClusterDiskStateBP = Check the storage connectivity and the cluster events.
 '@
 
     # Get-AbrHvConsistency
@@ -755,7 +796,8 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     PrefixFirmware = Disk firmware
     PrefixIscsiTarget = iSCSI target
     HealthCheck = Health Check:
-    ConsistencyBP = The configuration differs between the nodes in the following categories: {0}. Nodes of a cluster should use the same updates, drivers, firmware and settings, so that roles behave the same on every node after a failover or live migration.
+    ConsistencyFinding = The configuration differs between the nodes in the following categories: {0}.
+    ConsistencyBP = Nodes of a cluster should use the same updates, drivers, firmware and settings, so that roles behave the same on every node after a failover or live migration.
 '@
 
     # Get-AbrHvVirtualMachine
@@ -808,10 +850,28 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     ValueMemoryRange = {0} to {1}
     ValueDynamicMac = Dynamic
     HealthCheck = Health Check:
-    CheckpointsBP = The following virtual machines have checkpoints: {0}. Checkpoints are not a backup; merge checkpoints that are no longer needed, because they grow and slow down the disk access.
-    NotClusteredBP = The following virtual machines run on a cluster node but are not clustered roles: {0}. Make them highly available or document why they stay on one node.
-    ConfigurationVersionBP = The configuration version of the following virtual machines is lower than the default version of their host: {0}. Update the configuration version after all nodes run the new operating system, to use the current Hyper-V features.
-    NetworkDisconnectedBP = The following virtual machines have network adapters that are not connected to a virtual switch: {0}.
+    CheckpointsFinding = The following virtual machines have checkpoints: {0}.
+    CheckpointsBP = Checkpoints are not a backup; merge checkpoints that are no longer needed, because they grow and slow down the disk access.
+    NotClusteredFinding = The following virtual machines run on a cluster node but are not clustered roles: {0}.
+    NotClusteredBP = Make them highly available or document why they stay on one node.
+    ConfigurationVersionFinding = The configuration version of the following virtual machines is lower than the default version of their host: {0}.
+    ConfigurationVersionBP = Update the configuration version after all nodes run the new operating system, to use the current Hyper-V features.
+    NetworkDisconnectedFinding = The following virtual machines have network adapters that are not connected to a virtual switch: {0}.
+    NetworkDisconnectedBP = Connect the adapters to a virtual switch or remove adapters that are not needed.
+'@
+
+    # Get-AbrHvHealthCheckSummary
+    GetAbrHvHealthCheckSummary = ConvertFrom-StringData @'
+    Heading = Health Check Summary
+    ParagraphSummary = The following table lists every health check finding of {0}: {1} finding(s), {2} critical and {3} warning(s). The sections above contain the details.
+    NoFindings = The enabled health checks found no issues for {0}.
+    TableSummary = Health Check Summary
+    Area = Area
+    Severity = Severity
+    Finding = Finding
+    Recommendation = Recommendation
+    SeverityCritical = Critical
+    SeverityWarning = Warning
 '@
 
 }

@@ -209,15 +209,14 @@
                             BlankLine
                             if ($ShowRoleCheck) {
                                 if ($CauState.HasSelfUpdatingRole) {
-                                    Paragraph $LocalizedData.SelfUpdatingOfflineBP
+                                    Write-HvHealthCheck -Area $LocalizedData.Heading -Finding $LocalizedData.SelfUpdatingOfflineFinding -Recommendation $LocalizedData.SelfUpdatingOfflineBP
                                 } else {
-                                    Paragraph $LocalizedData.NoSelfUpdatingRoleBP
+                                    Write-HvHealthCheck -Area $LocalizedData.Heading -Finding $LocalizedData.NoSelfUpdatingRoleFinding -Recommendation $LocalizedData.NoSelfUpdatingRoleBP
                                 }
                                 BlankLine
                             }
                             if ($ShowRunCheck) {
-                                Paragraph $LocalizedData.LastRunBP
-                                BlankLine
+                                Write-HvHealthCheck -Area $LocalizedData.Heading -Finding $LocalizedData.LastRunFinding -Recommendation $LocalizedData.LastRunBP
                             }
                         }
 
