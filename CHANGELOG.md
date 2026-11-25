@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Cluster Roles` section with type, owner node, state, priority, preferred owners and failover settings of every clustered role
 - `Cluster Shared Volumes` section with path, owner, state, I/O mode per node, capacity and free space
 - `Cluster-Aware Updating` section with the self-updating role, its schedule and options and the last updating run
+- `Hyper-V Hosts` section with the Hyper-V specific host settings that AsBuiltReport.Microsoft.Windows does not cover: hypervisor scheduler, virtualization-based security and running security services, Secure Boot, TPM, VM configuration versions, enhanced session mode, GPU partitioning, Discrete Device Assignment and virtual Fibre Channel SANs; new `InfoLevel.Host`
+- Health checks for hosts with the classic hypervisor scheduler and SMT and for hosts with Secure Boot disabled
 - Health checks for failed or partially online roles, Cluster Shared Volumes that are not online, use redirected I/O (ReFS is expected and ignored) or run out of free space, a missing or offline CAU self-updating role and a failed last CAU run
 - Detection evidence for the Hyper-V role per host, physical disk resources, Cluster Shared Volumes, Scale-Out File Server roles and SMB shares that hold virtual hard disks
 - Readable values for the cluster functional level and the auto balancer mode and level

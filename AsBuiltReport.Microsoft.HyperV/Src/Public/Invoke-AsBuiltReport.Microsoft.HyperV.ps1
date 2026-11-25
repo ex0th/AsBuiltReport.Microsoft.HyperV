@@ -164,8 +164,10 @@
                 # Live migration settings of the cluster and of every host (also for standalone hosts)
                 Get-AbrHvLiveMigration
 
+                # Hyper-V specific host settings (scheduler, platform security, VM versions)
+                Get-AbrHvHost
+
                 # Planned sections (see README roadmap):
-                # Host: Hyper-V specific host settings
                 # Networking: SET switches, host vNICs, RDMA/DCB
                 # Storage by topology: S2D pool/virtual disks/cache/fault domains, iSCSI/FC/MPIO, SMB shares
                 # Consistency: node-to-node comparison as health checks

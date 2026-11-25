@@ -744,6 +744,153 @@ function Resolve-HvSettingDeviation {
     }
 }
 
+function Get-HvNodeName {
+    <#
+    .SYNOPSIS
+        Returns the node name for a node FQDN, spelled as in the discovery (cluster node name).
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    param (
+        [Parameter(Mandatory)]
+        [String] $Fqdn
+    )
+
+    $ShortName = $Fqdn.Split('.')[0]
+    $NodeFact = @($HvNodeFacts) | Where-Object { $_ -and $_.ComputerName -eq $ShortName } | Select-Object -First 1
+    if ($NodeFact) {
+        return [string]$NodeFact.ComputerName
+    }
+    $ShortName
+}
+
+function Invoke-HvNodeCommand {
+    <#
+    .SYNOPSIS
+        Runs a read-only script block on every node session of the current target.
+    .DESCRIPTION
+        Uses the sessions from the discovery ($HvNodeSessions) and adds the property NodeName (node name as
+        in the discovery) to every returned object. A node that fails is reported as warning with
+        FailureMessage ({0} = node FQDN, {1} = error) and does not stop the section.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [ScriptBlock] $ScriptBlock,
+
+        [Object[]] $ArgumentList,
+
+        [Parameter(Mandatory)]
+        [String] $FailureMessage
+    )
+
+    foreach ($Fqdn in @($HvNodeSessions.Keys)) {
+        $CommandParams = @{
+            Session = $HvNodeSessions[$Fqdn]
+            ScriptBlock = $ScriptBlock
+            ErrorAction = 'Stop'
+        }
+        if ($PSBoundParameters.ContainsKey('ArgumentList')) {
+            $CommandParams['ArgumentList'] = $ArgumentList
+        }
+        try {
+            $Result = Invoke-Command @CommandParams
+            $NodeName = Get-HvNodeName -Fqdn $Fqdn
+            foreach ($Item in @($Result | Where-Object { $_ })) {
+                $Item | Add-Member -MemberType NoteProperty -Name 'NodeName' -Value $NodeName -Force
+                $Item
+            }
+        } catch {
+            Write-PScriboMessage -IsWarning ($FailureMessage -f $Fqdn, $_.Exception.Message)
+        }
+    }
+}
+
+function Resolve-HvHostSecurity {
+    <#
+    .SYNOPSIS
+        Evaluates the hypervisor scheduler and the platform security settings of a Hyper-V host.
+    .DESCRIPTION
+        Pure function without remote calls. Input properties: SchedulerType (event 2 of the hypervisor),
+        VbsStatus and SecurityServicesRunning (Win32_DeviceGuard), SecureBoot (UEFISecureBootEnabled, $null
+        when the registry value is missing).
+
+        SchedulerKey: ClassicNoSmt (1), Classic (2), Core (3), Root (4), Unknown
+        VbsKey: Off (0), Configured (1, enabled but not running), Running (2), Unknown
+        ServiceKeys: CredentialGuard, Hvci, SystemGuard, SmmProtection, KernelShadowStack, Hvpt, Service<n>
+        SecureBootKey: On, Off, Unknown
+        Findings: ClassicScheduler, SecureBootOff
+
+        The classic scheduler is only reported with SMT enabled (type 2). With SMT disabled (type 1) virtual
+        processors do not share a core, so the classic scheduler is not a security concern.
+    .NOTES
+        Version:        0.1.0
+        Author:         Silas Süßmilch
+        Github:         ex0th
+    #>
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory)]
+        [Object] $HostSetting
+    )
+
+    $SchedulerKey = switch ([string]$HostSetting.SchedulerType) {
+        '1' { 'ClassicNoSmt' }
+        '2' { 'Classic' }
+        '3' { 'Core' }
+        '4' { 'Root' }
+        default { 'Unknown' }
+    }
+    $VbsKey = switch ([string]$HostSetting.VbsStatus) {
+        '0' { 'Off' }
+        '1' { 'Configured' }
+        '2' { 'Running' }
+        default { 'Unknown' }
+    }
+    $ServiceKeys = @(foreach ($Service in @($HostSetting.SecurityServicesRunning | Where-Object { $null -ne $_ })) {
+            switch ([string]$Service) {
+                '0' { continue }
+                '1' { 'CredentialGuard' }
+                '2' { 'Hvci' }
+                '3' { 'SystemGuard' }
+                '4' { 'SmmProtection' }
+                '5' { 'KernelShadowStack' }
+                '6' { 'Hvpt' }
+                default { "Service$Service" }
+            }
+        })
+    $SecureBootKey = switch ([string]$HostSetting.SecureBoot) {
+        { $_ -in '1', 'True' } { 'On'; break }
+        { $_ -in '0', 'False' } { 'Off'; break }
+        default { 'Unknown' }
+    }
+
+    $Findings = New-Object -TypeName System.Collections.Generic.List[String]
+    if ($SchedulerKey -eq 'Classic') {
+        $Findings.Add('ClassicScheduler')
+    }
+    if ($SecureBootKey -eq 'Off') {
+        $Findings.Add('SecureBootOff')
+    }
+
+    [PSCustomObject]@{
+        SchedulerKey = $SchedulerKey
+        VbsKey = $VbsKey
+        ServiceKeys = [String[]]$ServiceKeys
+        SecureBootKey = $SecureBootKey
+        Findings = [String[]]$Findings.ToArray()
+    }
+}
+
 function Resolve-HvClusterGroup {
     <#
     .SYNOPSIS

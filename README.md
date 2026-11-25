@@ -237,6 +237,7 @@ The table below outlines the default and maximum InfoLevel settings for each sec
 | Environment   |        1        |        2        |
 | Cluster       |        1        |        2        |
 | LiveMigration |        1        |        2        |
+| Host          |        1        |        2        |
 
 ### Healthcheck
 The **Healthcheck** schema is used to toggle health checks on or off.
@@ -261,6 +262,8 @@ The **Healthcheck** schema is used to toggle health checks on or off.
 | LiveMigration.MigrationNetwork  | true / false | true    | Highlights clusters that exclude every cluster network from live migration   | ![Critical](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FEDDD7.svg) Critical state |
 | LiveMigration.HostMigrationEnabled | true / false | true | Highlights hosts with incoming and outgoing live migrations disabled         | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 | LiveMigration.SettingsConsistency | true / false | true  | Highlights live migration settings that differ between hosts                 | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Host.SchedulerType              | true / false | true    | Highlights hosts that use the classic hypervisor scheduler with SMT enabled  | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
+| Host.SecureBoot                 | true / false | true    | Highlights hosts with Secure Boot disabled                                   | ![Warning](https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/highlight-swatches/FFF4C7.svg) Warning state |
 
 ## <img src="https://raw.githubusercontent.com/AsBuiltReport/.github/main/assets/section-icons/examples.svg" alt="" width="24" height="24" align="top"> Examples
 <!-- ********** Add some examples. Use other AsBuiltReport modules as a guide. ********** -->
@@ -286,7 +289,6 @@ The report follows the PScribo conventions used across AsBuiltReport modules, so
 
 | Area | Planned content |
 |---|---|
-| Host | Hardware, OS build, Hyper-V host settings (paths, NUMA spanning, migration), physical NICs |
 | Networking | Virtual switches including SET, host vNICs, RDMA, DCB/QoS (PFC, ETS) |
 | Storage: S2D / Azure Local | Storage pool, physical disks and cache, virtual disks with resiliency and tiers, fault domains |
 | Storage: 3-tier | iSCSI targets and sessions, Fibre Channel ports, MPIO policies, CSV and cluster disks |

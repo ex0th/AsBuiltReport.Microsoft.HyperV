@@ -400,4 +400,50 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     LastRunBP = Der letzte Lauf des clusterfähigen Aktualisierens war nicht erfolgreich. Prüfen Sie im Bericht des Laufs, auf welchen Knoten er fehlgeschlagen ist.
 '@
 
+    # Get-AbrHvHost
+    GetAbrHvHost = ConvertFrom-StringData @'
+    InfoLevel = InfoLevel für Host ist auf {0} gesetzt.
+    Collecting = Informationen zu den Hyper-V-Hosts von {0} werden gesammelt.
+    HostFailed = Die Hyper-V-Hosteinstellungen von '{0}' konnten nicht gesammelt werden: {1}
+    Heading = Hyper-V-Hosts
+    ParagraphSummary = Der folgende Abschnitt zeigt die Hyper-V-spezifischen Einstellungen der Hosts von {0}: Hypervisor-Scheduler, Plattformsicherheit und Konfigurationsversionen virtueller Computer. Hardware, Betriebssystem und Netzwerkadapter dokumentiert der Microsoft Windows As Built Report.
+    TableHosts = Hyper-V-Hosteinstellungen
+    TableHost = Hyper-V-Hosteinstellungen
+    HostName = Host
+    Scheduler = Hypervisor-Scheduler
+    Vbs = Virtualisierungsbasierte Sicherheit
+    SecureBoot = Sicherer Start
+    Tpm = TPM
+    DefaultVmVersion = Standard-VM-Version
+    SecurityServices = Aktive Sicherheitsdienste
+    SupportedVmVersions = Unterstützte VM-Versionen
+    EnhancedSessionMode = Erweiterter Sitzungsmodus
+    PartitionableGpus = Partitionierbare GPUs
+    AssignableDevices = Zuweisbare Geräte (DDA)
+    VirtualSans = Virtuelle Fibre-Channel-SANs
+    SchedulerClassicNoSmt = Klassisch (SMT deaktiviert)
+    SchedulerClassic = Klassisch
+    SchedulerCore = Core
+    SchedulerRoot = Root
+    SchedulerUnknown = Unbekannt
+    VbsOff = Aus
+    VbsConfigured = Aktiviert, nicht aktiv
+    VbsRunning = Aktiv
+    VbsUnknown = Unbekannt
+    ServiceCredentialGuard = Credential Guard
+    ServiceHvci = Speicherintegrität (HVCI)
+    ServiceSystemGuard = System Guard Secure Launch
+    ServiceSmmProtection = SMM-Firmwareschutz
+    ServiceKernelShadowStack = Hardwaregestützter Stapelschutz im Kernelmodus
+    ServiceHvpt = Hypervisorgestützte Paging-Übersetzung
+    SecureBootOn = Ein
+    SecureBootOff = Aus
+    SecureBootUnknown = Nicht verfügbar
+    ValueNotPresent = Nicht vorhanden
+    ValueNone = Keine
+    HealthCheck = Integritätsprüfung:
+    SchedulerTypeBP = Die folgenden Hosts verwenden den klassischen Hypervisor-Scheduler mit Simultaneous Multithreading (SMT): {0}. Beim klassischen Scheduler können sich virtuelle Prozessoren verschiedener virtueller Computer einen Prozessorkern teilen. Verwenden Sie den Core-Scheduler, der seit Windows Server 2019 Standard ist.
+    SecureBootBP = Der sichere Start ist auf den folgenden Hosts deaktiviert: {0}. Aktivieren Sie den sicheren Start in der UEFI-Firmware, um den Startvorgang des Hypervisors zu schützen.
+'@
+
 }

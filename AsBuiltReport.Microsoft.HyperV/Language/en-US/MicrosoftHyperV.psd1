@@ -399,4 +399,50 @@ GetAbrHvLiveMigration = ConvertFrom-StringData @'
     LastRunBP = The last Cluster-Aware Updating run did not succeed. Check the updating run report for the nodes that failed.
 '@
 
+    # Get-AbrHvHost
+    GetAbrHvHost = ConvertFrom-StringData @'
+    InfoLevel = Host InfoLevel set at {0}.
+    Collecting = Collecting Hyper-V host information for {0}.
+    HostFailed = Unable to collect the Hyper-V host settings of '{0}': {1}
+    Heading = Hyper-V Hosts
+    ParagraphSummary = The following section shows the Hyper-V specific settings of the hosts of {0}: hypervisor scheduler, platform security and virtual machine configuration versions. Hardware, operating system and network adapters are documented by the Microsoft Windows As Built Report.
+    TableHosts = Hyper-V Host Settings
+    TableHost = Hyper-V Host Settings
+    HostName = Host
+    Scheduler = Hypervisor Scheduler
+    Vbs = Virtualization-Based Security
+    SecureBoot = Secure Boot
+    Tpm = TPM
+    DefaultVmVersion = Default VM Version
+    SecurityServices = Running Security Services
+    SupportedVmVersions = Supported VM Versions
+    EnhancedSessionMode = Enhanced Session Mode
+    PartitionableGpus = Partitionable GPUs
+    AssignableDevices = Assignable Devices (DDA)
+    VirtualSans = Virtual Fibre Channel SANs
+    SchedulerClassicNoSmt = Classic (SMT disabled)
+    SchedulerClassic = Classic
+    SchedulerCore = Core
+    SchedulerRoot = Root
+    SchedulerUnknown = Unknown
+    VbsOff = Off
+    VbsConfigured = Enabled, not running
+    VbsRunning = Running
+    VbsUnknown = Unknown
+    ServiceCredentialGuard = Credential Guard
+    ServiceHvci = Memory integrity (HVCI)
+    ServiceSystemGuard = System Guard Secure Launch
+    ServiceSmmProtection = SMM firmware protection
+    ServiceKernelShadowStack = Kernel-mode hardware-enforced stack protection
+    ServiceHvpt = Hypervisor-enforced paging translation
+    SecureBootOn = On
+    SecureBootOff = Off
+    SecureBootUnknown = Not available
+    ValueNotPresent = Not present
+    ValueNone = None
+    HealthCheck = Health Check:
+    SchedulerTypeBP = The following hosts use the classic hypervisor scheduler with simultaneous multithreading (SMT): {0}. With the classic scheduler, virtual processors of different virtual machines can share a processor core. Use the core scheduler, the default since Windows Server 2019.
+    SecureBootBP = Secure Boot is disabled on the following hosts: {0}. Enable Secure Boot in the UEFI firmware to protect the boot process of the hypervisor.
+'@
+
 }

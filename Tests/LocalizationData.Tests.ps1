@@ -133,6 +133,23 @@ Describe 'Localization data' {
         }
     }
 
+    It 'provides display strings for every host scheduler, VBS, security service and Secure Boot value' {
+        $Section = $script:Template['GetAbrHvHost']
+        foreach ($Key in 'ClassicNoSmt', 'Classic', 'Core', 'Root', 'Unknown') {
+            $Section.ContainsKey("Scheduler$Key") | Should -BeTrue -Because "Scheduler$Key is rendered for that scheduler type"
+        }
+        foreach ($Key in 'Off', 'Configured', 'Running', 'Unknown') {
+            $Section.ContainsKey("Vbs$Key") | Should -BeTrue -Because "Vbs$Key is rendered for that VBS status"
+        }
+        # Unknown service numbers show the raw key.
+        foreach ($Key in 'CredentialGuard', 'Hvci', 'SystemGuard', 'SmmProtection', 'KernelShadowStack', 'Hvpt') {
+            $Section.ContainsKey("Service$Key") | Should -BeTrue -Because "Service$Key is rendered for that security service"
+        }
+        foreach ($Key in 'On', 'Off', 'Unknown') {
+            $Section.ContainsKey("SecureBoot$Key") | Should -BeTrue -Because "SecureBoot$Key is rendered for that state"
+        }
+    }
+
     # Only defined when translations exist: Pester 6 fails on empty -TestCases, and Pester 5 has no
     # -AllowNullOrEmptyForEach switch.
     if ($script:LanguageFolders.Count -gt 0) {
