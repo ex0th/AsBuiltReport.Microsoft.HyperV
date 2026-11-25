@@ -116,6 +116,7 @@
                                                             NumberOfDataCopies = [string]$_.NumberOfDataCopies
                                                             PhysicalDiskRedundancy = [string]$_.PhysicalDiskRedundancy
                                                             MediaType = [string]$_.MediaType
+                                                            ProvisioningType = [string]$_.ProvisioningType
                                                             Size = [double]$_.Size
                                                         }
                                                     })
@@ -246,7 +247,13 @@
                             $LocalizedData.Resiliency = $Resiliency
                             $LocalizedData.Size = ConvertTo-HvSize $VirtualDisk.Size
                             $LocalizedData.Footprint = ConvertTo-HvSize $VirtualDisk.FootprintOnPool
-                            $LocalizedData.Provisioning = ConvertTo-HvDisplayValue $VirtualDisk.ProvisioningType
+                            # Volumes created with storage tiers store the provisioning type on the tiers.
+                            $LocalizedData.Provisioning = $(if ($VirtualDisk.ProvisioningType) {
+                                    ConvertTo-HvDisplayValue $VirtualDisk.ProvisioningType
+                                } else {
+                                    ConvertTo-HvDisplayValue @($VirtualDisk.Tiers | Where-Object { $_ -and $_.ProvisioningType } |
+                                            ForEach-Object { $_.ProvisioningType } | Select-Object -Unique)
+                                })
                             $LocalizedData.HealthStatus = ConvertTo-HvDisplayValue $VirtualDisk.HealthStatus
                             $LocalizedData.OperationalStatus = ConvertTo-HvDisplayValue $VirtualDisk.OperationalStatus
                         }
